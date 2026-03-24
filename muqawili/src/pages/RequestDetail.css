@@ -1,0 +1,62 @@
+.request-page { padding: 32px 0 60px; }
+.request-grid { display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start; }
+.request-main { display: flex; flex-direction: column; gap: 16px; }
+
+.request-card { padding: 28px; }
+.req-header { margin-bottom: 20px; display: flex; flex-direction: column; gap: 10px; }
+.req-header h1 { font-size: 22px; font-weight: 700; }
+.req-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 13px; color: var(--gray-400); }
+
+.status-badge {
+  display: inline-block; padding: 3px 10px; border-radius: 20px;
+  font-size: 12px; font-weight: 500; margin-left: 8px;
+}
+.status-open        { background: var(--accent-bg); color: var(--accent); }
+.status-in_progress { background: var(--warn-bg);   color: var(--warn); }
+.status-closed      { background: var(--gray-200);  color: var(--gray-600); }
+.status-cancelled   { background: var(--danger-bg); color: var(--danger); }
+.cat-label { font-size: 13px; color: var(--gray-400); }
+
+.req-desc h3 { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+.req-desc p  { font-size: 14px; color: var(--gray-600); line-height: 1.7; white-space: pre-line; }
+.req-budget { display: flex; align-items: center; gap: 8px; padding-top: 16px; border-top: 1px solid var(--gray-200); font-size: 14px; }
+.req-budget strong { color: var(--primary); font-size: 16px; }
+
+.quote-form { padding: 24px; }
+.quote-form h2 { font-size: 17px; font-weight: 600; margin-bottom: 16px; }
+.qf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.quote-form .input-group { margin-bottom: 12px; }
+.success-msg { font-size: 13px; color: var(--accent); background: var(--accent-bg); padding: 8px 12px; border-radius: var(--radius-sm); }
+
+.login-prompt { padding: 24px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.login-prompt p { color: var(--gray-400); font-size: 14px; }
+
+/* Quotes panel */
+.quotes-panel { display: flex; flex-direction: column; gap: 12px; }
+.quotes-title { font-size: 17px; font-weight: 600; margin-bottom: 4px; }
+
+.quote-card { padding: 18px; transition: box-shadow .2s; }
+.quote-card.accepted { border-color: var(--accent); background: var(--accent-bg); }
+.quote-card.rejected { opacity: .55; }
+
+.qc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.qc-contractor { display: flex; align-items: center; gap: 10px; }
+.qc-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: var(--primary-bg); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 14px;
+}
+.qc-rating { font-size: 12px; color: var(--gray-400); margin-right: 6px; }
+
+.accepted-badge { font-size: 12px; font-weight: 600; color: var(--accent); }
+
+.qc-details { display: flex; align-items: center; gap: 16px; margin-bottom: 8px; }
+.qc-price  { font-size: 20px; font-weight: 700; color: var(--primary); }
+.qc-duration { font-size: 13px; color: var(--gray-400); }
+.qc-notes { font-size: 13px; color: var(--gray-600); line-height: 1.5; margin-bottom: 10px; }
+.empty-quotes { padding: 24px; text-align: center; color: var(--gray-400); font-size: 14px; }
+
+@media (max-width: 900px) {
+  .request-grid { grid-template-columns: 1fr; }
+  .qf-row { grid-template-columns: 1fr; }
+}
