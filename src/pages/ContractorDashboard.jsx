@@ -1,254 +1,341 @@
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
-import './Dashboard.css'
-
-const CAT_LABELS = { cladding:'كلادينج', plumbing:'سباكة', electrical:'كهرباء', demolition:'هدم وبناء', finishing:'تشطيب', painting:'دهانات', flooring:'أرضيات', hvac:'تكييف', general:'عام' }
-const CATS = Object.entries(CAT_LABELS)
-const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم']
+import './ContractorDashboard.css'
 
 export default function ContractorDashboard() {
-  const { user, profile } = useAuth()
   const navigate = useNavigate()
-  const [cp, setCp]           = useState(null)
+  const [user, setUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [stats, setStats] = useState({ requests: 0, quotes: 0, portfolio: 0, rating: 0 })
   const [requests, setRequests] = useState([])
-  const [myQuotes, setMyQuotes] = useState([])
-  const [tab, setTab]           = useState('requests')
-  const [loading, setLoading]   = useState(true)
-  const [saving, setSaving]     = useState(false)
-  const [msg, setMsg]           = useState('')
+  const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('overview')
 
-  const [bio, setBio]           = useState('')
-  const [years, setYears]       = useState(0)
-  const [hasReg, setHasReg]     = useState(false)
-  const [regNo, setRegNo]       = useState('')
-  const [available, setAvail]   = useState(true)
-  const [selSpecs, setSpecs]    = useState([])
-  const [selCities, setCities]  = useState([])
+  useEffect(() => { loadData() }, [])
 
-  useEffect(() => {
-    if (!user) { navigate('/login'); return }
-    if (profile?.user_type !== 'contractor') { navigate('/dashboard/client'); return }
-    fetchAll()
-  }, [user])
+  async function loadData() {
+    const { data: { user: u } } = await supabase.auth.getUser()
+    if (!u) { navigate('/login'); return }
 
-  async function fetchAll() {
-    const { data: p } = await supabase
+    const { data: userData } = await supabase.from('users').select('*').eq('id', u.id).single()
+    if (!userData || userData.user_type !== 'contractor') { navigate('/'); return }
+    setUser(userData)
+
+    const { data: profileData } = await supabase
       .from('contractor_profiles')
-      .select('*, contractor_specializations(category), contractor_areas(city,district)')
-      .eq('user_id', user.id).single()
+      .select('*')
+      .eq('user_id', u.id)
+      .single()
+    setProfile(profileData)
 
-    if (p) {
-      setCp(p)
-      setBio(p.bio || ''); setYears(p.years_experience || 0)
-      setHasReg(p.has_commercial_reg); setRegNo(p.commercial_reg_no || '')
-      setAvail(p.is_available)
-      setSpecs(p.contractor_specializations?.map(s => s.category) || [])
-      setCities(p.contractor_areas?.map(a => a.city) || [])
+    const { data: quotesData } = await supabase
+      .from('price_quotes')
+      .select('id, status')
+      .eq('contractor_id', profileData?.id)
+    
+    const { data: portfolioData } = await supabase
+      .from('contractor_portfolio')
+      .select('id')
+      .eq('contractor_id', profileData?.id)
 
-      // Fetch matching requests
-      const myCities = p.contractor_areas?.map(a => a.city) || []
-      const mySpecs  = p.contractor_specializations?.map(s => s.category) || []
-      if (myCities.length && mySpecs.length) {
-        const { data: reqs } = await supabase
-          .from('service_requests')
-          .select('*, users(full_name)')
-          .eq('status', 'open')
-          .in('city', myCities)
-          .in('category', mySpecs)
-          .order('created_at', { ascending: false })
-          .limit(20)
-        setRequests(reqs || [])
-      }
+    const { data: requestsData } = await supabase
+      .from('service_requests')
+      .select('*, users!service_requests_client_id_fkey(full_name, city)')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(10)
+    setRequests(requestsData || [])
 
-      const { data: qts } = await supabase
-        .from('price_quotes')
-        .select('*, service_requests(title, city, status)')
-        .eq('contractor_id', p.id)
-        .order('created_at', { ascending: false })
-      setMyQuotes(qts || [])
-    }
+    setStats({
+      requests: requestsData?.length || 0,
+      quotes: quotesData?.length || 0,
+      portfolio: portfolioData?.length || 0,
+      rating: profileData?.avg_rating || 0
+    })
     setLoading(false)
   }
 
-  function toggleSpec(cat) {
-    setSpecs(s => s.includes(cat) ? s.filter(x => x !== cat) : [...s, cat])
-  }
-  function toggleCity(city) {
-    setCities(s => s.includes(city) ? s.filter(x => x !== city) : [...s, city])
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    navigate('/login')
   }
 
-  async function saveProfile() {
-    setSaving(true); setMsg('')
-    await supabase.from('contractor_profiles').update({
-      bio, years_experience: years,
-      has_commercial_reg: hasReg, commercial_reg_no: regNo || null,
-      is_available: available,
-    }).eq('user_id', user.id)
-
-    await supabase.from('contractor_specializations').delete().eq('contractor_id', cp.id)
-    if (selSpecs.length) {
-      await supabase.from('contractor_specializations').insert(selSpecs.map(cat => ({ contractor_id: cp.id, category: cat })))
-    }
-
-    await supabase.from('contractor_areas').delete().eq('contractor_id', cp.id)
-    if (selCities.length) {
-      await supabase.from('contractor_areas').insert(selCities.map(city => ({ contractor_id: cp.id, city })))
-    }
-
-    setMsg('تم حفظ التغييرات بنجاح ✓')
-    setSaving(false)
-    fetchAll()
+  async function sendQuote(requestId) {
+    navigate('/dashboard/contractor/quote/' + requestId)
   }
 
-  if (loading) return <div className="page-loading"><div className="spinner"/></div>
+  const CATEGORY_MAP = {
+    cladding: 'كلادينج', plumbing: 'سباكة', electrical: 'كهرباء',
+    demolition: 'هدم', finishing: 'تشطيب', painting: 'دهان', flooring: 'أرضيات',
+    hvac: 'تكييف', general: 'عام'
+  }
 
-  const badgeMap = { verified: '✓ معتمد رسمياً', trusted: '★ موثوق', none: 'جديد' }
+  if (loading) return (
+    <div className="dash-loading">
+      <div className="dash-spinner"></div>
+      <p>جاريي التحميل...</p>
+    </div>
+  )
 
   return (
-    <div className="dashboard-page">
-      <div className="container">
-        <div className="db-header">
+    <div className="contractor-dash" dir="rtl">
+      {/* Sidebar */}
+      <aside className="dash-sidebar">
+        <div className="dash-brand">🏗️ مقاولي</div>
+        
+        <div className="dash-profile-mini">
+          <div className="dash-avatar">{user?.full_name?.[0] || 'م'}</div>
           <div>
-            <h1>لوحة تحكم المقاول</h1>
-            <p>أهلاً {profile?.full_name} — {badgeMap[cp?.badge_type] || ''}</p>
-          </div>
-          <div className="db-stats">
-            <div className="db-stat"><span>{requests.length}</span><small>طلب متاح</small></div>
-            <div className="db-stat"><span>{myQuotes.length}</span><small>عرض مقدَّم</small></div>
+            <div className="dash-name">{user?.full_name}</div>
+            <div className="dash-role">مقاول</div>
           </div>
         </div>
 
-        {/* TABS */}
-        <div className="db-tabs">
-          {[['requests','الطلبات المتاحة'],['quotes','عروضي'],['profile','ملفي']].map(([key,label]) => (
-            <button key={key} className={`tab-btn ${tab===key?'active':''}`} onClick={() => setTab(key)}>{label}</button>
+        <nav className="dash-nav">
+          {[
+            { id: 'overview', icon: '📊', label: 'نظرة عامة' },
+            { id: 'requests', icon: '📋', label: 'طلبات الخدمة' },
+            { id: 'quotes', icon: '💰', label: 'عروضي' },
+            { id: 'portfolio', icon: '🖼️', label: 'أعمالي' },
+            { id: 'profile', icon: '👤', label: 'ملفي' },
+          ].map(item => (
+            <button key={item.id} className={'dash-nav-item ' + (activeTab === item.id ? 'active' : '')} onClick={() => setActiveTab(item.id)}>
+              <span>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
+        <button className="dash-logout" onClick={handleLogout}>🚪 تسجيل خروج</button>
+      </aside>
+
+      {/* Main Content */}
+      <main className="dash-main">
+        
+        {/* Overview Tab */}
+        {activeTab === 'overview' && (
+          <div className="dash-content">
+            <h1 className="dash-title">مرحباً، {user?.full_name?.split(' ')[0]} 👋</h1>
+            
+            <div className="stats-grid">
+              <div className="stat-card">
+                <div className="stat-icon">📋</div>
+                <div className="stat-value">{stats.requests}</div>
+                <div className="stat-label">طلبات متاحة</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">💰</div>
+                <div className="stat-value">{stats.quotes}</div>
+                <div className="stat-label">عروضي</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">🖼️</div>
+                <div className="stat-value">{stats.portfolio}</div>
+                <div className="stat-label">أعمال منجزة</div>
+              </div>
+              <div className="stat-card">
+                <div className="stat-icon">⭐</div>
+                <div className="stat-value">{stats.rating > 0 ? stats.rating.toFixed(1) : 'جديد'}</div>
+                <div className="stat-label">التقييم</div>
+              </div>
+            </div>
+
+            <h2 className="section-title">آخر طلبات الخدمة</h2>
+            <div className="requests-list">
+              {requests.slice(0, 5).map(req => (
+                <div key={req.id} className="request-card">
+                  <div className="request-header">
+                    <span className="request-category">{CATEGORY_MAP[req.category] || req.category}</span>
+                    <span className="request-city">📍 {req.city}</span>
+                  </div>
+                  <h3 className="request-title">{req.title}</h3>
+                  <p className="request-desc">{req.description?.slice(0, 100)}...</p>
+                  {req.budget_min && <p className="request-budget">💰 {req.budget_min?.toLocaleString()} - {req.budget_max?.toLocaleString()} ريال</p>}
+                  <div className="request-footer">
+                    <span className="request-client">👤 {req.users?.full_name}</span>
+                    <button className="btn-quote" onClick={() => setActiveTab('requests')}>إرسال عرض</button>
+                  </div>
+                </div>
+              ))}
+              {requests.length === 0 && <p className="empty-state">لا توجد طلبات حالياً</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Requests Tab */}
+        {activeTab === 'requests' && (
+          <div className="dash-content">
+            <h1 className="dash-title">طلبات الخدمة</h1>
+            <div className="requests-list">
+              {requests.map(req => (
+                <div key={req.id} className="request-card">
+                  <div className="request-header">
+                    <span className="request-category">{CATEGORY_MAP[req.category] || req.category}</span>
+                    <span className="request-city">📍 {req.city}</span>
+                  </div>
+                  <h3 className="request-title">{req.title}</h3>
+                  <p className="request-desc">{req.description}</p>
+                  {req.budget_min && <p className="request-budget">💰 {req.budget_min?.toLocaleString()} - {req.budget_max?.toLocaleString()} ريال</p>}
+                  <div className="request-footer">
+                    <span className="request-client">👤 {req.users?.full_name} | {req.users?.city}</span>
+                    <button className="btn-quote" onClick={() => alert('سيتم إضافة نموذج عرض السعر قريباً')}>إرسال عرض سعر</button>
+                  </div>
+                </div>
+              ))}
+              {requests.length === 0 && <p className="empty-state">لا توجد طلبات حالياً</p>}
+            </div>
+          </div>
+        )}
+
+        {/* Portfolio Tab */}
+        {activeTab === 'portfolio' && (
+          <div className="dash-content">
+            <h1 className="dash-title">أعمالي</h1>
+            <PortfolioSection contractorId={profile?.id} />
+          </div>
+        )}
+
+        {/* Profile Tab */}
+        {activeTab === 'profile' && (
+          <div className="dash-content">
+            <h1 className="dash-title">ملفي الشخصي</h1>
+            <ProfileSection user={user} profile={profile} onUpdate={loadData} />
+          </div>
+        )}
+
+        {/* Quotes Tab */}
+        {activeTab === 'quotes' && (
+          <div className="dash-content">
+            <h1 className="dash-title">عروضي</h1>
+            <QuotesSection contractorId={profile?.id} />
+          </div>
+        )}
+      </main>
+    </div>
+  )
+}
+
+function PortfolioSection({ contractorId }) {
+  const [items, setItems] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!contractorId) return
+    supabase.from('contractor_portfolio').select('*').eq('contractor_id', contractorId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { setItems(data || []); setLoading(false) })
+  }, [contractorId])
+
+  if (loading) return <div className="empty-state">جاريي التحميل...</div>
+
+  return (
+    <div>
+      {items.length === 0 ? (
+        <div className="empty-state">لا توجد أعمال بعد. أضف أول عمل!</div>
+      ) : (
+        <div className="portfolio-grid">
+          {items.map(item => (
+            <div key={item.id} className="portfolio-card">
+              <img src={item.image_url} alt={item.title} className="portfolio-img" />
+              <div className="portfolio-info">
+                <h3>{item.title}</h3>
+                {item.description && <p>{item.description}</p>}
+              </div>
+            </div>
           ))}
         </div>
+      )}
+    </div>
+  )
+}
 
-        {/* ── REQUESTS TAB ── */}
-        {tab === 'requests' && (
-          <div className="tab-content">
-            {requests.length === 0 ? (
-              <div className="empty-state">
-                <span className="empty-icon">📋</span>
-                <h3>لا توجد طلبات في منطقتك وتخصصك حالياً</h3>
-                <p>تأكد من تحديث تخصصاتك ومناطق عملك</p>
-                <button className="btn btn-outline" onClick={() => setTab('profile')}>تحديث الملف</button>
-              </div>
-            ) : (
-              <div className="requests-list">
-                {requests.map(r => (
-                  <Link key={r.id} to={`/request/${r.id}`} className="req-item card">
-                    <div className="ri-header">
-                      <h3>{r.title}</h3>
-                      <span className="ri-cat">{CAT_LABELS[r.category]}</span>
-                    </div>
-                    <p className="ri-desc">{r.description?.slice(0, 100)}...</p>
-                    <div className="ri-footer">
-                      <span>📍 {r.city}{r.district ? ` — ${r.district}` : ''}</span>
-                      {r.budget_max && <span>💰 حتى {r.budget_max.toLocaleString()} ريال</span>}
-                      <span className="ri-date">{new Date(r.created_at).toLocaleDateString('ar-SA')}</span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+function ProfileSection({ user, profile, onUpdate }) {
+  const [bio, setBio] = useState(profile?.bio || '')
+  const [years, setYears] = useState(profile?.years_experience || 0)
+  const [available, setAvailable] = useState(profile?.is_available ?? true)
+  const [saving, setSaving] = useState(false)
+  const [saved, setSaved] = useState(false)
 
-        {/* ── QUOTES TAB ── */}
-        {tab === 'quotes' && (
-          <div className="tab-content">
-            {myQuotes.length === 0 ? (
-              <div className="empty-state"><span className="empty-icon">📨</span><h3>لم تقدم أي عروض بعد</h3></div>
-            ) : (
-              <div className="quotes-list">
-                {myQuotes.map(q => (
-                  <Link key={q.id} to={`/request/${q.request_id}`} className="quote-item card">
-                    <div className="qi-title">{q.service_requests?.title}</div>
-                    <div className="qi-meta">
-                      <span className="qi-price">{q.price?.toLocaleString()} ريال</span>
-                      <span>{q.duration_days} يوم</span>
-                      <span className={`qi-status status-${q.status}`}>
-                        {q.status === 'pending' ? 'قيد الانتظار' : q.status === 'accepted' ? '✓ مقبول' : '✗ مرفوض'}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
+  async function handleSave() {
+    setSaving(true)
+    await supabase.from('contractor_profiles').update({ bio, years_experience: years, is_available: available }).eq('user_id', user.id)
+    setSaving(false); setSaved(true)
+    setTimeout(() => setSaved(false), 2000)
+    onUpdate()
+  }
 
-        {/* ── PROFILE TAB ── */}
-        {tab === 'profile' && (
-          <div className="tab-content profile-edit card">
-            <h2>تعديل ملفك الشخصي</h2>
-
-            <div className="input-group">
-              <label>نبذة تعريفية</label>
-              <textarea className="input" rows={3} value={bio} onChange={e => setBio(e.target.value)} placeholder="اشرح خبرتك وما تتميز به..." />
-            </div>
-
-            <div className="form-row2">
-              <div className="input-group">
-                <label>سنوات الخبرة</label>
-                <input className="input" type="number" min={0} max={50} value={years} onChange={e => setYears(e.target.value)} />
-              </div>
-              <div className="input-group">
-                <label>
-                  <input type="checkbox" checked={available} onChange={e => setAvail(e.target.checked)} style={{marginLeft:6}} />
-                  متاح لاستقبال طلبات جديدة
-                </label>
-              </div>
-            </div>
-
-            <div className="form-row2">
-              <div className="input-group">
-                <label>
-                  <input type="checkbox" checked={hasReg} onChange={e => setHasReg(e.target.checked)} style={{marginLeft:6}} />
-                  لدي سجل تجاري
-                </label>
-              </div>
-              {hasReg && (
-                <div className="input-group">
-                  <label>رقم السجل التجاري</label>
-                  <input className="input" value={regNo} onChange={e => setRegNo(e.target.value)} placeholder="1234567890" />
-                </div>
-              )}
-            </div>
-
-            <div className="input-group">
-              <label>التخصصات</label>
-              <div className="toggle-pills">
-                {CATS.map(([key, label]) => (
-                  <button key={key} type="button" className={`pill ${selSpecs.includes(key) ? 'on' : ''}`} onClick={() => toggleSpec(key)}>
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="input-group">
-              <label>مناطق العمل</label>
-              <div className="toggle-pills">
-                {CITIES.map(city => (
-                  <button key={city} type="button" className={`pill ${selCities.includes(city) ? 'on' : ''}`} onClick={() => toggleCity(city)}>
-                    {city}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {msg && <p className="success-msg">{msg}</p>}
-            <button className="btn btn-primary" onClick={saveProfile} disabled={saving}>
-              {saving ? <span className="spinner-sm"/> : 'حفظ التغييرات'}
-            </button>
-          </div>
-        )}
+  return (
+    <div className="profile-form">
+      <div className="form-field">
+        <label>الاسم الكامل</label>
+        <input type="text" value={user?.full_name || ''} disabled className="disabled" />
       </div>
+      <div className="form-field">
+        <label>الجوال</label>
+        <input type="text" value={user?.phone || ''} disabled className="disabled" />
+      </div>
+      <div className="form-field">
+        <label>المدينة</label>
+        <input type="text" value={user?.city || ''} disabled className="disabled" />
+      </div>
+      <div className="form-field">
+        <label>نبذة عنك</label>
+        <textarea rows={4} value={bio} onChange={e => setBio(e.target.value)} placeholder="اكتب نبذة مختصرة عن خبرتك..." />
+      </div>
+      <div className="form-field">
+        <label>سنوات الخبرة</label>
+        <input type="number" value={years} onChange={e => setYears(Number(e.target.value))} min={0} max={50} />
+      </div>
+      <div className="form-field form-toggle">
+        <label>متاح للعمل</label>
+        <button className={'toggle-btn ' + (available ? 'on' : 'off')} onClick={() => setAvailable(!available)}>
+          {available ? 'نعم' : 'لا'}
+        </button>
+      </div>
+      <button className="save-btn" onClick={handleSave} disabled={saving}>
+        {saving ? 'جاريي الحفظ...' : saved ? '✅ تم الحفظ' : 'حفظ التغييرات'}
+      </button>
+    </div>
+  )
+}
+
+function QuotesSection({ contractorId }) {
+  const [quotes, setQuotes] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    if (!contractorId) return
+    supabase.from('price_quotes')
+      .select('*, service_requests(title, city, category)')
+      .eq('contractor_id', contractorId)
+      .order('created_at', { ascending: false })
+      .then(({ data }) => { setQuotes(data || []); setLoading(false) })
+  }, [contractorId])
+
+  const STATUS = { pending: 'معلق', accepted: 'مقبول ✅', rejected: 'مرفوض ❌' }
+
+  if (loading) return <div className="empty-state">جاريي التحميل...</div>
+
+  return (
+    <div>
+      {quotes.length === 0 ? (
+        <div className="empty-state">لم ترسل أي عروض بعد</div>
+      ) : (
+        <div className="quotes-list">
+          {quotes.map(q => (
+            <div key={q.id} className="quote-card">
+              <div className="quote-header">
+                <h3>{q.service_requests?.title}</h3>
+                <span className={'quote-status ' + q.status}>{STATUS[q.status]}</span>
+              </div>
+              <p className="quote-price">💰 {q.price?.toLocaleString()} ريال</p>
+              <p className="quote-duration">⏱ {q.duration_days} يوم</p>
+              {q.notes && <p className="quote-notes">{q.notes}</p>}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
