@@ -32,7 +32,7 @@ export default function Login() {
     if (!nationalId.match(/^[12]\d{9}$/)) { setError('رقم الهوية 10 أرقام يبدأ بـ 1 أو 2'); setLoading(false); return }
     const { data: user } = await supabase.from('users').select('id, user_type').eq('phone', fp).eq('national_id', nationalId).maybeSingle()
     if (!user) { setError('رقم الجوال أو رقم الهوية غير صحيح'); setLoading(false); return }
-    const fakeEmail = `${user.id}@muqawili.app`
+    const fakeEmail = user.id + '@muqawili.app'
     const { error: e1 } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: nationalId })
     if (e1) {
       await supabase.auth.signUp({ email: fakeEmail, password: nationalId })
@@ -50,9 +50,9 @@ export default function Login() {
     if (fp.length < 13) { setError('أدخل رقم جوال سعودي صحيح'); setLoading(false); return }
     if (!regNationalId.match(/^[12]\d{9}$/)) { setError('رقم الهوية 10 أرقام يبدأ بـ 1 أو 2'); setLoading(false); return }
     if (!city) { setError('اختر مدينتك'); setLoading(false); return }
-    const { data: ex } = await supabase.from('users').select('id').or(`phone.eq.${fp},national_id.eq.${regNationalId}`).maybeSingle()
+    const { data: ex } = await supabase.from('users').select('id').or('phone.eq.' + fp + ',national_id.eq.' + regNationalId).maybeSingle()
     if (ex) { setError('هذا الجوال أو رقم الهوية مسجل مسبقاً'); setLoading(false); return }
-    const fakeEmail = `${crypto.randomUUID()}@muqawili.app`
+    const fakeEmail = crypto.randomUUID() + '@muqawili.app'
     const { data: auth, error: e1 } = await supabase.auth.signUp({ email: fakeEmail, password: regNationalId })
     if (e1 || !auth.user) { setError('حدث خطأ في إنشاء الحساب'); setLoading(false); return }
     const { error: e2 } = await supabase.from('users').insert({ id: auth.user.id, phone: fp, full_name: fullName.trim(), national_id: regNationalId, user_type: userType, city, is_verified: true })
@@ -66,15 +66,11 @@ export default function Login() {
     <div className="auth-page" dir="rtl">
       <div className="auth-bg" />
       <div className="auth-wrap">
-        <div className="auth-logo">
-          <div className="auth-logo-icon">🏗️</div>
-          <h1>مقاولي</h1>
-          <p>سوق المقاولات السعودي</p>
-        </div>
+        <div className="auth-logo"><div className="auth-logo-icon">🏗️</div><h1>مقاولي</h1><p>سوق المقاولات السعودي</p></div>
         <div className="auth-card">
           <div className="auth-tabs">
-            <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={()=>{setTab('login');setError('')}}>تسجيل الدخول</button>
-            <button className={`auth-tab ${tab==='register'?'active':''}`} onClick={()=>{setTab('register');setError('')}}>حساب جديد</button>
+            <button className={'auth-tab '+(tab==='login'?'active':'')} onClick={()=>{setTab('login');setError('')}}>تسجيل الدخول</button>
+            <button className={'auth-tab '+(tab==='register'?'active':'')} onClick={()=>{setTab('register');setError('')}}>حساب جديد</button>
           </div>
           {tab==='login' && <div className="auth-form">
             <div className="field"><label>رقم الجوال</label><input type="tel" placeholder="05xxxxxxxx" value={phone} onChange={e=>setPhone(e.target.value)} /></div>
@@ -87,12 +83,7 @@ export default function Login() {
             <div className="field"><label>رقم الجوال</label><input type="tel" placeholder="05xxxxxxxx" value={regPhone} onChange={e=>setRegPhone(e.target.value)} /></div>
             <div className="field"><label>رقم الهوية الوطنية</label><input type="text" placeholder="1xxxxxxxxx" value={regNationalId} onChange={e=>setRegNationalId(e.target.value)} maxLength={10} /></div>
             <div className="field"><label>المدينة</label><select value={city} onChange={e=>setCity(e.target.value)}><option value="">اختر مدينتك</option>{CITIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
-            <div className="field"><label>نوع الحساب</label>
-              <div className="type-group">
-                <button type="button" className={`type-btn ${userType==='client'?'active':''}`} onClick={()=>setUserType('client')}>🏠 صاحب عمل</button>
-                <button type="button" className={`type-btn ${userType==='contractor'?'active':''}`} onClick={()=>setUserType('contractor')}>🔧 مقاول</button>
-              </div>
-            </div>
+            <div className="field"><label>نوع الحساب</label><div className="type-group"><button type="button" className={'type-btn '+(userType==='client'?'active':'')} onClick={()=>setUserType('client')}>🏠 صاحب عمل</button><button type="button" className={'type-btn '+(userType==='contractor'?'active':'')} onClick={()=>setUserType('contractor')}>🔧 مقاول</button></div></div>
             {error && <div className="auth-error">⚠️ {error}</div>}
             <button className="auth-btn" onClick={handleRegister} disabled={loading}>{loading?<span className="spinner"/>:'إنشاء الحساب'}</button>
           </div>}
