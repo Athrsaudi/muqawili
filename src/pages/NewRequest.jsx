@@ -1,153 +1,164 @@
 import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
 import './NewRequest.css'
 
 const CATEGORIES = [
-  { key: 'cladding',   label: 'كلادينج',       icon: '🏗️' },
-  { key: 'plumbing',   label: 'سباكة',         icon: '🔧' },
-  { key: 'electrical', label: 'كهرباء',        icon: '⚡' },
-  { key: 'demolition', label: 'هدم وبناء',     icon: '🪚' },
-  { key: 'finishing',  label: 'تشطيب',         icon: '🏠' },
-  { key: 'painting',   label: 'دهانات',        icon: '🎨' },
-  { key: 'flooring',   label: 'أرضيات',        icon: '🪵' },
-  { key: 'hvac',       label: 'تكييف وتهوية',  icon: '❄️' },
-  { key: 'general',    label: 'مقاولات عامة',  icon: '🏢' },
+  { value: 'cladding', label: 'كلادينج', icon: '🏗️' },
+  { value: 'plumbing', label: 'سباكة', icon: '🚧' },
+  { value: 'electrical', label: 'كهرباء', icon: '⚡' },
+  { value: 'demolition', label: 'هدم', icon: '💥' },
+  { value: 'finishing', label: 'تشطيب', icon: '🎨' },
+  { value: 'painting', label: 'دهان', icon: '🖌️' },
+  { value: 'flooring', label: 'أرضيات', icon: '🧱' },
+  { value: 'hvac', label: 'تكييف', icon: '❄️' },
+  { value: 'general', label: 'عام', icon: '🔧' },
 ]
 
-const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم']
+const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم','نجران','جازان']
 
 export default function NewRequest() {
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
-  const [form, setForm] = useState({ title:'', description:'', category:'', city:'', district:'', budget_min:'', budget_max:'' })
+  const [step, setStep] = useState(1)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [form, setForm] = useState({
+    title: '',
+    description: '',
+    category: '',
+    city: '',
+    district: '',
+    budget_min: '',
+    budget_max: '',
+  })
 
-  if (!user) return (
-    <div className="page-loading">
-      <span style={{fontSize:48}}>🔐</span>
-      <h3>يجب تسجيل الدخول أولاً</h3>
-      <Link to="/login" className="btn btn-primary">تسجيل الدخول</Link>
-    </div>
-  )
-
-  const set = (k, v) => setForm(f => ({ ...f, [k]: v }))
+  function update(field, value) {
+    setForm(prev => ({ ...prev, [field]: value }))
+  }
 
   async function handleSubmit() {
-    setError('')
-    if (!form.title.trim())       { setError('أدخل عنوان الطلب'); return }
-    if (!form.description.trim()) { setError('أدخل وصف العمل المطلوب'); return }
-    if (!form.category)           { setError('اختر نوع الخدمة'); return }
-    if (!form.city)               { setError('اختر مدينة المشروع'); return }
-
-    setLoading(true)
-    const expiry = new Date()
-    expiry.setDate(expiry.getDate() + 30)
-
+    setError(''); setLoading(true)
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { navigate('/login'); return }
+    if (!form.title.trim()) { setError('أدخل عنوان الطلب'); setLoading(false); return }
+    if (!form.description.trim()) { setError('أدخل وصف الطلب'); setLoading(false); return }
+    if (!form.category) { setError('اختر تصنيف الخدمة'); setLoading(false); return }
+    if (!form.city) { setError('اختر المدينة'); setLoading(false); return }
     const { data, error: err } = await supabase.from('service_requests').insert({
-      client_id:   user.id,
-      title:       form.title,
-      description: form.description,
-      category:    form.category,
-      city:        form.city,
-      district:    form.district || null,
-      budget_min:  form.budget_min ? parseFloat(form.budget_min) : null,
-      budget_max:  form.budget_max ? parseFloat(form.budget_max) : null,
-      expires_at:  expiry.toISOString(),
+      client_id: user.id,
+      title: form.title.trim(),
+      description: form.description.trim(),
+      category: form.category,
+      city: form.city,
+      district: form.district || null,
+      budget_min: form.budget_min ? Number(form.budget_min) : null,
+      budget_max: form.budget_max ? Number(form.budget_max) : null,
+      status: 'open',
     }).select().single()
-
-    if (err) { setError('حدث خطأ أثناء نشر الطلب، حاول مجدداً'); setLoading(false); return }
-    navigate(`/request/${data.id}`)
+    setLoading(false)
+    if (err) { setError('حدث خطأ، حاول مرة أخرى'); return }
+    navigate('/requests/' + data.id)
   }
 
   return (
-    <div className="new-request-page">
-      <div className="container">
-        <div className="nr-card card">
-          <div className="nr-header">
-            <h1>نشر طلب جديد</h1>
-            <p>أنشر تفاصيل مشروعك وسيصلك عروض من مقاولين في منطقتك</p>
-          </div>
-
-          <div className="nr-form">
-            {/* Title */}
-            <div className="input-group">
-              <label>عنوان الطلب *</label>
-              <input className="input" type="text" placeholder="مثال: تركيب كلادينج لواجهة عمارة تجارية"
-                value={form.title} onChange={e => set('title', e.target.value)} maxLength={200} />
-              <span className="char-count">{form.title.length}/200</span>
-            </div>
-
-            {/* Category */}
-            <div className="input-group">
-              <label>نوع الخدمة *</label>
-              <div className="category-picker">
-                {CATEGORIES.map(cat => (
-                  <button
-                    key={cat.key}
-                    type="button"
-                    className={`cat-btn ${form.category === cat.key ? 'selected' : ''}`}
-                    onClick={() => set('category', cat.key)}
-                  >
-                    <span>{cat.icon}</span>
-                    <span>{cat.label}</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Description */}
-            <div className="input-group">
-              <label>وصف العمل المطلوب *</label>
-              <textarea className="input textarea" rows={4}
-                placeholder="اشرح بالتفصيل ما تحتاجه: المساحة، نوع المواد، أي متطلبات خاصة..."
-                value={form.description} onChange={e => set('description', e.target.value)} maxLength={2000}
-              />
-              <span className="char-count">{form.description.length}/2000</span>
-            </div>
-
-            {/* Location */}
-            <div className="form-row">
-              <div className="input-group">
-                <label>مدينة المشروع *</label>
-                <select className="input" value={form.city} onChange={e => set('city', e.target.value)}>
-                  <option value="">اختر المدينة</option>
-                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <div className="input-group">
-                <label>الحي (اختياري)</label>
-                <input className="input" type="text" placeholder="مثال: الروضة"
-                  value={form.district} onChange={e => set('district', e.target.value)} />
-              </div>
-            </div>
-
-            {/* Budget */}
-            <div className="form-row">
-              <div className="input-group">
-                <label>الميزانية الدنيا (ريال)</label>
-                <input className="input" type="number" placeholder="5000"
-                  value={form.budget_min} onChange={e => set('budget_min', e.target.value)} min={0} />
-              </div>
-              <div className="input-group">
-                <label>الميزانية القصوى (ريال)</label>
-                <input className="input" type="number" placeholder="20000"
-                  value={form.budget_max} onChange={e => set('budget_max', e.target.value)} min={0} />
-              </div>
-            </div>
-
-            {error && <p className="error-msg">{error}</p>}
-
-            <div className="nr-submit">
-              <button className="btn btn-primary btn-lg" onClick={handleSubmit} disabled={loading}>
-                {loading ? <span className="spinner-sm"/> : '🚀 نشر الطلب الآن'}
-              </button>
-              <p className="nr-note">سيبقى طلبك مفتوحاً لمدة ٣٠ يوماً</p>
-            </div>
-          </div>
+    <div className="new-req-page" dir="rtl">
+      <div className="new-req-container">
+        <div className="new-req-header">
+          <button className="back-btn" onClick={() => navigate(-1)}>← رجوع</button>
+          <h1>طلب خدمة جديد</h1>
         </div>
+
+        <div className="steps-bar">
+          {[1,2,3].map(s => (
+            <div key={s} className={'step ' + (step >= s ? 'active' : '') + (step > s ? ' done' : '')}>
+              <div className="step-num">{step > s ? '✓' : s}</div>
+              <div className="step-label">{s===1?'التفاصيل':s===2?'التصنيف':'الميزانية'}</div>
+            </div>
+          ))}
+        </div>
+
+        {step === 1 && (
+          <div className="step-content">
+            <div className="field">
+              <label>عنوان الطلب *</label>
+              <input type="text" placeholder="مثال: تركيب كلادينج لواجهة عمارة" value={form.title} onChange={e=>update('title',e.target.value)} />
+            </div>
+            <div className="field">
+              <label>وصف الطلب *</label>
+              <textarea rows={5} placeholder="صف العمل المطلوب بتفصيل..." value={form.description} onChange={e=>update('description',e.target.value)} />
+            </div>
+            <div className="field">
+              <label>المدينة *</label>
+              <select value={form.city} onChange={e=>update('city',e.target.value)}>
+                <option value="">اختر المدينة</option>
+                {CITIES.map(c=><option key={c} value={c}>{c}</option>)}
+              </select>
+            </div>
+            <div className="field">
+              <label>الحي (اختياري)</label>
+              <input type="text" placeholder="مثال: حي النزهة" value={form.district} onChange={e=>update('district',e.target.value)} />
+            </div>
+            <button className="next-btn" onClick={() => {
+              if (!form.title.trim() || !form.description.trim() || !form.city) { setError('يرجى تعبئة جميع الحقول الإلزامية'); return }
+              setError(''); setStep(2)
+            }}>التالي →</button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="step-content">
+            <label className="field-label">تصنيف الخدمة *</label>
+            <div className="categories-grid">
+              {CATEGORIES.map(cat => (
+                <button key={cat.value} className={'cat-card ' + (form.category === cat.value ? 'active' : '')} onClick={() => update('category', cat.value)}>
+                  <span className="cat-icon">{cat.icon}</span>
+                  <span className="cat-label">{cat.label}</span>
+                </button>
+              ))}
+            </div>
+            <div className="step-btns">
+              <button className="back-step-btn" onClick={() => setStep(1)}>← رجوع</button>
+              <button className="next-btn" onClick={() => {
+                if (!form.category) { setError('اختر تصنيف الخدمة'); return }
+                setError(''); setStep(3)
+              }}>التالي →</button>
+            </div>
+          </div>
+        )}
+
+        {step === 3 && (
+          <div className="step-content">
+            <div className="budget-section">
+              <label className="field-label">الميزانية المتوقعة (ريال سعودي)</label>
+              <div className="budget-row">
+                <div className="field">
+                  <label>الحد الأدنى</label>
+                  <input type="number" placeholder="5000" value={form.budget_min} onChange={e=>update('budget_min',e.target.value)} />
+                </div>
+                <div className="budget-sep">-</div>
+                <div className="field">
+                  <label>الحد الأعلى</label>
+                  <input type="number" placeholder="20000" value={form.budget_max} onChange={e=>update('budget_max',e.target.value)} />
+                </div>
+              </div>
+            </div>
+
+            <div className="req-summary">
+              <h3>ملخص الطلب</h3>
+              <div className="summary-row"><span>العنوان:</span><span>{form.title}</span></div>
+              <div className="summary-row"><span>التصنيف:</span><span>{CATEGORIES.find(c=>c.value===form.category)?.label}</span></div>
+              <div className="summary-row"><span>المدينة:</span><span>{form.city}</span></div>
+            </div>
+
+            {error && <div className="req-error">⚠️ {error}</div>}
+            <div className="step-btns">
+              <button className="back-step-btn" onClick={() => setStep(2)}>← رجوع</button>
+              <button className="submit-btn" onClick={handleSubmit} disabled={loading}>{loading ? 'جاريي...' : 'إرسال الطلب ✓'}</button>
+            </div>
+          </div>
+        )}
+
+        {error && step < 3 && <div className="req-error">⚠️ {error}</div>}
       </div>
     </div>
   )
