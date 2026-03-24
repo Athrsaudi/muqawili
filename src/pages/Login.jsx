@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../../lib/supabase'
+import { supabase } from '../lib/supabase'
 import './Login.css'
 
 const STEPS = { PHONE: 'phone', OTP: 'otp', TYPE: 'type', NAME: 'name' }
