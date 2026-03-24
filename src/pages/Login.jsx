@@ -3,198 +3,178 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import './Login.css'
 
-const STEPS = { PHONE: 'phone', OTP: 'otp', TYPE: 'type', NAME: 'name' }
+const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم']
+
+function formatPhone(raw) {
+  const n = raw.replace(/\D/g, '')
+  if (n.startsWith('966')) return '+' + n
+  if (n.startsWith('0')) return '+966' + n.slice(1)
+  return '+966' + n
+}
 
 export default function Login() {
   const navigate = useNavigate()
-  const [step, setStep]       = useState(STEPS.PHONE)
-  const [phone, setPhone]     = useState('')
-  const [otp, setOtp]         = useState('')
-  const [userType, setType]   = useState('')
-  const [fullName, setName]   = useState('')
-  const [nationalId, setNid]  = useState('')
-  const [city, setCity]       = useState('')
+  const [tab, setTab] = useState('login') // 'login' | 'register'
   const [loading, setLoading] = useState(false)
-  const [error, setError]     = useState('')
+  const [error, setError] = useState('')
 
-  const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم']
+  // Login
+  const [phone, setPhone] = useState('')
+  const [nationalId, setNationalId] = useState('')
 
-  function formatPhone(raw) {
-    const digits = raw.replace(/\D/g, '')
-    if (digits.startsWith('966')) return '+' + digits
-    if (digits.startsWith('0'))   return '+966' + digits.slice(1)
-    if (digits.length === 9)      return '+966' + digits
-    return '+966' + digits
-  }
+  // Register
+  const [fullName, setFullName] = useState('')
+  const [regPhone, setRegPhone] = useState('')
+  const [regNationalId, setRegNationalId] = useState('')
+  const [userType, setUserType] = useState('client')
+  const [city, setCity] = useState('')
 
-  async function sendOtp() {
+  async function handleLogin() {
     setError(''); setLoading(true)
-    const formatted = formatPhone(phone)
-    if (formatted.length < 13) { setError('أدخل رقم جوال سعودي صحيح'); setLoading(false); return }
-    const { error: err } = await supabase.auth.signInWithOtp({ phone: formatted })
-    if (err) { setError('تعذر إرسال الرمز، تحقق من الرقم وحاول مجدداً'); setLoading(false); return }
-    setStep(STEPS.OTP); setLoading(false)
+    const fp = formatPhone(phone)
+    if (fp.length < 13) { setError('أدخل رقم جوال سعودي صحيح'); setLoading(false); return }
+    if (!nationalId.match(/^[12]\d{9}$/)) { setError('أدخل رقم هوية وطنية صحيح (10 أرقام)'); setLoading(false); return }
+
+    const { data: user, error: dbErr } = await supabase
+      .from('users')
+      .select('id, user_type')
+      .eq('phone', fp)
+      .eq('national_id', nationalId)
+      .single()
+
+    if (dbErr || !user) {
+      setError('رقم الجوال أو رقم الهوية غير صحيح')
+      setLoading(false); return
+    }
+
+    const fakeEmail = `${user.id}@muqawili.app`
+    const { error: signInErr } = await supabase.auth.signInWithPassword({ email: fakeEmail, password: nationalId })
+
+    if (signInErr) {
+      await supabase.auth.signUp({ email: fakeEmail, password: nationalId })
+      await supabase.auth.signInWithPassword({ email: fakeEmail, password: nationalId })
+    }
+
+    user.user_type === 'contractor' ? navigate('/dashboard/contractor') : navigate('/')
+    setLoading(false)
   }
 
-  async function verifyOtp() {
-    setError(''); setLoading(true)
-    const formatted = formatPhone(phone)
-    const { data, error: err } = await supabase.auth.verifyOtp({ phone: formatted, token: otp, type: 'sms' })
-    if (err || !data.user) { setError('الرمز غير صحيح أو انتهت صلاحيته'); setLoading(false); return }
-
-    // Check if user already has a profile
-    const { data: existing } = await supabase.from('users').select('id,user_type').eq('id', data.user.id).single()
-    if (existing) { navigate('/'); return }
-
-    setStep(STEPS.TYPE); setLoading(false)
-  }
-
-  async function completeProfile() {
+  async function handleRegister() {
     setError(''); setLoading(true)
     if (!fullName.trim()) { setError('أدخل اسمك الكامل'); setLoading(false); return }
-    if (!nationalId.match(/^[12]\d{9}$/)) { setError('أدخل رقم هوية وطنية صحيح (١٠ أرقام)'); setLoading(false); return }
+    const fp = formatPhone(regPhone)
+    if (fp.length < 13) { setError('أدخل رقم جوال سعودي صحيح'); setLoading(false); return }
+    if (!regNationalId.match(/^[12]\d{9}$/)) { setError('أدخل رقم هوية وطنية صحيح (10 أرقام)'); setLoading(false); return }
     if (!city) { setError('اختر مدينتك'); setLoading(false); return }
 
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: existing } = await supabase
+      .from('users').select('id')
+      .or(`phone.eq.${fp},national_id.eq.${regNationalId}`)
+      .maybeSingle()
 
-    const { error: err } = await supabase.from('users').insert({
-      id: user.id, phone: formatPhone(phone),
-      full_name: fullName, national_id: nationalId,
-      user_type: userType, city, is_verified: true
+    if (existing) { setError('هذا الجوال أو رقم الهوية مسجل مسبقاً'); setLoading(false); return }
+
+    const tempId = crypto.randomUUID()
+    const fakeEmail = `${tempId}@muqawili.app`
+
+    const { data: authData, error: signUpErr } = await supabase.auth.signUp({ email: fakeEmail, password: regNationalId })
+    if (signUpErr || !authData.user) { setError('حدث خطأ في إنشاء الحساب'); setLoading(false); return }
+
+    const { error: insertErr } = await supabase.from('users').insert({
+      id: authData.user.id,
+      phone: fp,
+      full_name: fullName,
+      national_id: regNationalId,
+      user_type: userType,
+      city,
+      is_verified: true,
     })
 
-    if (err) {
-      if (err.code === '23505') setError('هذه الهوية مسجلة مسبقاً')
-      else setError('حدث خطأ، حاول مرة أخرى')
+    if (insertErr) {
+      setError(insertErr.code === '23505' ? 'هذه الهوية مسجلة مسبقاً' : 'حدث خطأ، حاول مرة أخرى')
       setLoading(false); return
     }
 
     if (userType === 'contractor') {
-      await supabase.from('contractor_profiles').insert({ user_id: user.id, years_experience: 0 })
+      await supabase.from('contractor_profiles').insert({ user_id: authData.user.id, years_experience: 0 })
       navigate('/dashboard/contractor')
     } else {
       navigate('/')
     }
+    setLoading(false)
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <div className="login-logo">
-          <span className="logo-icon">🔨</span>
-          <span className="logo-text">مقاولي</span>
+    <div className="login-page" dir="rtl">
+      <div className="login-container">
+        <div className="login-header">
+          <div className="login-logo">🏗️</div>
+          <h1>مقاولي</h1>
+          <p>سوق المقاولات السعودي</p>
         </div>
 
-        {/* ── STEP 1: PHONE ── */}
-        {step === STEPS.PHONE && (
-          <div className="login-step">
-            <h2>أهلاً بك</h2>
-            <p className="step-desc">أدخل رقم جوالك للدخول أو التسجيل</p>
-            <div className="input-group">
-              <label>رقم الجوال</label>
-              <div className="phone-input-wrapper">
-                <span className="phone-prefix">🇸🇦 +966</span>
-                <input
-                  className="input phone-input"
-                  type="tel"
-                  placeholder="05XXXXXXXX"
-                  value={phone}
-                  onChange={e => setPhone(e.target.value)}
-                  onKeyDown={e => e.key === 'Enter' && sendOtp()}
-                  maxLength={10}
-                />
+        <div className="login-card">
+          <div className="login-tabs">
+            <button className={tab === 'login' ? 'active' : ''} onClick={() => { setTab('login'); setError('') }}>
+              تسجيل الدخول
+            </button>
+            <button className={tab === 'register' ? 'active' : ''} onClick={() => { setTab('register'); setError('') }}>
+              حساب جديد
+            </button>
+          </div>
+
+          {tab === 'login' && (
+            <div className="login-form">
+              <div className="form-group">
+                <label>رقم الجوال</label>
+                <input type="tel" value={phone} onChange={e => setPhone(e.target.value)} placeholder="05xxxxxxxx" />
               </div>
-            </div>
-            {error && <p className="error-msg">{error}</p>}
-            <button className="btn btn-primary btn-full btn-lg" onClick={sendOtp} disabled={loading}>
-              {loading ? <span className="spinner-sm"/> : 'إرسال رمز التحقق'}
-            </button>
-          </div>
-        )}
-
-        {/* ── STEP 2: OTP ── */}
-        {step === STEPS.OTP && (
-          <div className="login-step">
-            <h2>رمز التحقق</h2>
-            <p className="step-desc">أرسلنا رمزاً من ٦ أرقام إلى <strong>{phone}</strong></p>
-            <div className="input-group">
-              <label>رمز التحقق</label>
-              <input
-                className="input otp-input"
-                type="number"
-                placeholder="_ _ _ _ _ _"
-                value={otp}
-                onChange={e => setOtp(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && verifyOtp()}
-                maxLength={6}
-              />
-            </div>
-            {error && <p className="error-msg">{error}</p>}
-            <button className="btn btn-primary btn-full btn-lg" onClick={verifyOtp} disabled={loading || otp.length < 6}>
-              {loading ? <span className="spinner-sm"/> : 'تحقق من الرمز'}
-            </button>
-            <button className="btn btn-ghost btn-full" onClick={() => { setStep(STEPS.PHONE); setOtp(''); setError('') }}>
-              تغيير رقم الجوال
-            </button>
-          </div>
-        )}
-
-        {/* ── STEP 3: USER TYPE ── */}
-        {step === STEPS.TYPE && (
-          <div className="login-step">
-            <h2>نوع حسابك</h2>
-            <p className="step-desc">اختر كيف ستستخدم المنصة</p>
-            <div className="type-cards">
-              <button
-                className={`type-card ${userType === 'contractor' ? 'selected' : ''}`}
-                onClick={() => { setType('contractor'); setStep(STEPS.NAME) }}
-              >
-                <span className="type-icon">👷</span>
-                <strong>أنا مقاول</strong>
-                <span>أقدم خدمات البناء والمقاولات</span>
-              </button>
-              <button
-                className={`type-card ${userType === 'client' ? 'selected' : ''}`}
-                onClick={() => { setType('client'); setStep(STEPS.NAME) }}
-              >
-                <span className="type-icon">🏗️</span>
-                <strong>أبحث عن مقاول</strong>
-                <span>لدي مشروع أو أحتاج خدمة</span>
+              <div className="form-group">
+                <label>رقم الهوية الوطنية</label>
+                <input type="text" value={nationalId} onChange={e => setNationalId(e.target.value)} placeholder="1xxxxxxxxx" maxLength={10} />
+              </div>
+              {error && <div className="login-error">{error}</div>}
+              <button className="login-btn" onClick={handleLogin} disabled={loading}>
+                {loading ? 'جارٍ الدخول...' : 'دخول'}
               </button>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* ── STEP 4: COMPLETE PROFILE ── */}
-        {step === STEPS.NAME && (
-          <div className="login-step">
-            <h2>أكمل بياناتك</h2>
-            <p className="step-desc">بياناتك الأساسية لإنشاء حسابك</p>
-            <div className="input-group">
-              <label>الاسم الكامل</label>
-              <input className="input" type="text" placeholder="محمد أحمد العتيبي" value={fullName} onChange={e => setName(e.target.value)} />
+          {tab === 'register' && (
+            <div className="login-form">
+              <div className="form-group">
+                <label>الاسم الكامل</label>
+                <input type="text" value={fullName} onChange={e => setFullName(e.target.value)} placeholder="محمد بن أحمد" />
+              </div>
+              <div className="form-group">
+                <label>رقم الجوال</label>
+                <input type="tel" value={regPhone} onChange={e => setRegPhone(e.target.value)} placeholder="05xxxxxxxx" />
+              </div>
+              <div className="form-group">
+                <label>رقم الهوية الوطنية</label>
+                <input type="text" value={regNationalId} onChange={e => setRegNationalId(e.target.value)} placeholder="1xxxxxxxxx" maxLength={10} />
+              </div>
+              <div className="form-group">
+                <label>المدينة</label>
+                <select value={city} onChange={e => setCity(e.target.value)}>
+                  <option value="">اختر مدينتك</option>
+                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className="form-group">
+                <label>نوع الحساب</label>
+                <div className="user-type-btns">
+                  <button className={userType === 'client' ? 'active' : ''} onClick={() => setUserType('client')}>🏠 صاحب عمل</button>
+                  <button className={userType === 'contractor' ? 'active' : ''} onClick={() => setUserType('contractor')}>🔧 مقاول</button>
+                </div>
+              </div>
+              {error && <div className="login-error">{error}</div>}
+              <button className="login-btn" onClick={handleRegister} disabled={loading}>
+                {loading ? 'جارٍ إنشاء الحساب...' : 'إنشاء الحساب'}
+              </button>
             </div>
-            <div className="input-group">
-              <label>رقم الهوية الوطنية</label>
-              <input className="input" type="number" placeholder="1XXXXXXXXX" value={nationalId} onChange={e => setNid(e.target.value)} maxLength={10} />
-            </div>
-            <div className="input-group">
-              <label>المدينة</label>
-              <select className="input" value={city} onChange={e => setCity(e.target.value)}>
-                <option value="">اختر مدينتك</option>
-                {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-              </select>
-            </div>
-            {error && <p className="error-msg">{error}</p>}
-            <button className="btn btn-primary btn-full btn-lg" onClick={completeProfile} disabled={loading}>
-              {loading ? <span className="spinner-sm"/> : 'إنشاء الحساب'}
-            </button>
-          </div>
-        )}
-
-        <p className="login-footer">
-          بالمتابعة توافق على <a href="/terms">شروط الاستخدام</a> و<a href="/privacy">سياسة الخصوصية</a>
-        </p>
+          )}
+        </div>
       </div>
     </div>
   )
