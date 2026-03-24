@@ -1,176 +1,153 @@
-import { useState, useEffect } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import './Search.css'
 
 const CATEGORIES = [
-  { key: '',           label: 'الكل' },
-  { key: 'cladding',   label: 'كلادينج',      icon: '🏗️' },
-  { key: 'plumbing',   label: 'سباكة',        icon: '🔧' },
-  { key: 'electrical', label: 'كهرباء',       icon: '⚡' },
-  { key: 'demolition', label: 'هدم وبناء',    icon: '🪚' },
-  { key: 'finishing',  label: 'تشطيب',        icon: '🏠' },
-  { key: 'painting',   label: 'دهانات',       icon: '🎨' },
-  { key: 'flooring',   label: 'أرضيات',       icon: '🪵' },
-  { key: 'hvac',       label: 'تكييف',        icon: '❄️' },
-  { key: 'general',    label: 'عام',          icon: '🏢' },
+  { value: '', label: 'كل التصنيفات' },
+  { value: 'cladding', label: 'كلادينج' },
+  { value: 'plumbing', label: 'سباكة' },
+  { value: 'electrical', label: 'كهرباء' },
+  { value: 'demolition', label: 'هدم' },
+  { value: 'finishing', label: 'تشطيب' },
+  { value: 'painting', label: 'دهان' },
+  { value: 'flooring', label: 'أرضيات' },
+  { value: 'hvac', label: 'تكييف' },
+  { value: 'general', label: 'عام' },
 ]
 
-const CITIES = ['','جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم']
-const BADGES = [{ key: '', label: 'الكل' },{ key: 'verified', label: 'معتمد' },{ key: 'trusted', label: 'موثوق' }]
+const CITIES = ['', 'جدة', 'الرياض', 'مكة المكرمة', 'المدينة المنورة', 'الدمام', 'الخبر', 'تبوك', 'أبها', 'حائل', 'القصيم', 'نجران', 'جازان']
 
-const BADGE_LABELS = { verified: 'معتمد رسمياً', trusted: 'موثوق', none: 'جديد' }
-const BADGE_CLASS  = { verified: 'badge-verified', trusted: 'badge-trusted', none: 'badge-none' }
+const CATEGORY_LABEL = { cladding:'كلادينج', plumbing:'سباكة', electrical:'كهرباء', demolition:'هدم', finishing:'تشطيب', painting:'دهان', flooring:'أرضيات', hvac:'تكييف', general:'عام' }
 
 export default function Search() {
-  const [params, setParams] = useSearchParams()
-  const [contractors, setContractors] = useState([])
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [requests, setRequests] = useState([])
   const [loading, setLoading] = useState(true)
+  const [total, setTotal] = useState(0)
 
-  const city     = params.get('city')     || ''
-  const category = params.get('category') || ''
-  const badge    = params.get('badge')    || ''
+  const q = searchParams.get('q') || ''
+  const category = searchParams.get('category') || ''
+  const city = searchParams.get('city') || ''
+  const sort = searchParams.get('sort') || 'newest'
+  const page = Number(searchParams.get('page') || 1)
+  const PAGE_SIZE = 10
 
-  useEffect(() => { fetchContractors() }, [city, category, badge])
+  useEffect(() => { loadRequests() }, [q, category, city, sort, page])
 
-  async function fetchContractors() {
+  async function loadRequests() {
     setLoading(true)
-    let query = supabase
-      .from('contractor_profiles')
-      .select(`
-        id, bio, years_experience, badge_type, avg_rating, total_reviews, is_available,
-        users!inner(full_name, city),
-        contractor_specializations(category),
-        contractor_areas(city, district)
-      `)
-      .eq('is_available', true)
-      .order('avg_rating', { ascending: false })
+    let query = supabase.from('service_requests')
+      .select('*, users!service_requests_client_id_fkey(full_name, city)', { count: 'exact' })
+      .eq('status', 'open')
 
-    if (badge) query = query.eq('badge_type', badge)
+    if (q) query = query.or('title.ilike.%' + q + '%,description.ilike.%' + q + '%')
+    if (category) query = query.eq('category', category)
+    if (city) query = query.eq('city', city)
 
-    const { data, error } = await query
-    if (error) { setLoading(false); return }
+    if (sort === 'newest') query = query.order('created_at', { ascending: false })
+    else if (sort === 'oldest') query = query.order('created_at', { ascending: true })
+    else if (sort === 'budget_high') query = query.order('budget_max', { ascending: false })
+    else if (sort === 'budget_low') query = query.order('budget_min', { ascending: true })
 
-    let filtered = data || []
+    query = query.range((page - 1) * PAGE_SIZE, page * PAGE_SIZE - 1)
 
-    if (city) {
-      filtered = filtered.filter(c =>
-        c.contractor_areas?.some(a => a.city === city)
-      )
-    }
-    if (category) {
-      filtered = filtered.filter(c =>
-        c.contractor_specializations?.some(s => s.category === category)
-      )
-    }
-
-    setContractors(filtered)
+    const { data, count } = await query
+    setRequests(data || [])
+    setTotal(count || 0)
     setLoading(false)
   }
 
-  function updateParam(key, val) {
-    const next = new URLSearchParams(params)
-    if (val) next.set(key, val); else next.delete(key)
-    setParams(next)
+  function updateParam(key, value) {
+    const params = new URLSearchParams(searchParams)
+    if (value) params.set(key, value)
+    else params.delete(key)
+    if (key !== 'page') params.delete('page')
+    setSearchParams(params)
   }
 
-  const catLabel = CATEGORIES.find(c => c.key === category)?.label || 'الكل'
+  const totalPages = Math.ceil(total / PAGE_SIZE)
 
   return (
-    <div className="search-page">
-      <div className="container">
+    <div className="search-page" dir="rtl">
+      <div className="search-container">
+        <h1 className="search-title">طلبات الخدمة</h1>
 
-        {/* ── FILTERS ── */}
-        <div className="filters-bar card">
-          <div className="filter-group">
-            <label>المدينة</label>
-            <select className="input" value={city} onChange={e => updateParam('city', e.target.value)}>
-              <option value="">كل المدن</option>
-              {CITIES.filter(Boolean).map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>التخصص</label>
-            <select className="input" value={category} onChange={e => updateParam('category', e.target.value)}>
-              {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.icon || ''} {c.label}</option>)}
-            </select>
-          </div>
-          <div className="filter-group">
-            <label>الشارة</label>
-            <select className="input" value={badge} onChange={e => updateParam('badge', e.target.value)}>
-              {BADGES.map(b => <option key={b.key} value={b.key}>{b.label}</option>)}
-            </select>
-          </div>
+        {/* Search Bar */}
+        <div className="search-bar">
+          <input
+            type="text"
+            placeholder="ابحث عن طلب..."
+            value={q}
+            onChange={e => updateParam('q', e.target.value)}
+            className="search-input"
+          />
+          <Link to="/requests/new" className="new-req-btn">+ طلب جديد</Link>
         </div>
 
-        {/* ── RESULTS HEADER ── */}
-        <div className="results-header">
-          <h2>
-            {loading ? 'جارٍ البحث...' : `${contractors.length} مقاول`}
-            {city && <span className="filter-tag"> في {city}</span>}
-            {category && <span className="filter-tag"> · {catLabel}</span>}
-          </h2>
+        {/* Filters */}
+        <div className="filters-row">
+          <select value={category} onChange={e => updateParam('category', e.target.value)} className="filter-select">
+            {CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+          </select>
+          <select value={city} onChange={e => updateParam('city', e.target.value)} className="filter-select">
+            <option value="">كل المدن</option>
+            {CITIES.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+          <select value={sort} onChange={e => updateParam('sort', e.target.value)} className="filter-select">
+            <option value="newest">الأحدث</option>
+            <option value="oldest">الأقدم</option>
+            <option value="budget_high">أعلى ميزانية</option>
+            <option value="budget_low">أدنى ميزانية</option>
+          </select>
         </div>
 
-        {/* ── RESULTS ── */}
+        {/* Results count */}
+        <div className="results-count">
+          {loading ? 'جاريي البحث...' : total + ' طلب'}
+        </div>
+
+        {/* Results */}
         {loading ? (
-          <div className="loading-grid">
-            {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton-card"/>)}
+          <div className="search-loading">
+            {[1,2,3,4,5].map(i => <div key={i} className="skeleton-card" />)}
           </div>
-        ) : contractors.length === 0 ? (
-          <div className="empty-state">
-            <span className="empty-icon">🔍</span>
-            <h3>لا يوجد مقاولون في هذا البحث</h3>
-            <p>جرب تغيير المدينة أو التخصص</p>
+        ) : requests.length === 0 ? (
+          <div className="no-results">
+            <div className="no-results-icon">🔍</div>
+            <p>لا توجد طلبات تطابق البحث</p>
           </div>
         ) : (
-          <div className="contractors-grid">
-            {contractors.map(c => (
-              <ContractorCard key={c.id} contractor={c} />
+          <div className="results-list">
+            {requests.map(req => (
+              <Link key={req.id} to={'/requests/' + req.id} className="result-card">
+                <div className="result-header">
+                  <span className="result-cat">{CATEGORY_LABEL[req.category] || req.category}</span>
+                  <span className="result-city">📍 {req.city}</span>
+                </div>
+                <h2 className="result-title">{req.title}</h2>
+                <p className="result-desc">{req.description?.slice(0, 120)}...</p>
+                <div className="result-footer">
+                  <span className="result-client">👤 {req.users?.full_name}</span>
+                  {req.budget_min && <span className="result-budget">💰 {req.budget_min?.toLocaleString()} - {req.budget_max?.toLocaleString()} ريال</span>}
+                  <span className="result-date">{new Date(req.created_at).toLocaleDateString('ar-SA')}</span>
+                </div>
+              </Link>
             ))}
+          </div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="pagination">
+            <button disabled={page <= 1} onClick={() => updateParam('page', page - 1)} className="page-btn">←</button>
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
+              <button key={p} className={'page-btn ' + (p === page ? 'active' : '')} onClick={() => updateParam('page', p)}>{p}</button>
+            ))}
+            <button disabled={page >= totalPages} onClick={() => updateParam('page', page + 1)} className="page-btn">→</button>
           </div>
         )}
       </div>
     </div>
-  )
-}
-
-function ContractorCard({ contractor: c }) {
-  const name  = c.users?.full_name || 'مقاول'
-  const city  = c.users?.city || ''
-  const specs = c.contractor_specializations?.map(s =>
-    CATEGORIES.find(cat => cat.key === s.category)?.label || s.category
-  ).slice(0, 3) || []
-
-  return (
-    <Link to={`/contractor/${c.id}`} className="contractor-card card">
-      <div className="cc-header">
-        <div className="cc-avatar">
-          {name.charAt(0)}
-        </div>
-        <div className="cc-info">
-          <h3>{name}</h3>
-          <span className="cc-city">📍 {city}</span>
-        </div>
-        <span className={`badge ${BADGE_CLASS[c.badge_type] || 'badge-none'}`}>
-          {c.badge_type === 'verified' ? '✓ ' : ''}{BADGE_LABELS[c.badge_type] || 'جديد'}
-        </span>
-      </div>
-
-      {c.bio && <p className="cc-bio">{c.bio.slice(0, 90)}{c.bio.length > 90 ? '...' : ''}</p>}
-
-      <div className="cc-specs">
-        {specs.map((s, i) => <span key={i} className="spec-tag">{s}</span>)}
-      </div>
-
-      <div className="cc-footer">
-        <div className="cc-rating">
-          <span className="stars">{'★'.repeat(Math.round(c.avg_rating || 0))}{'☆'.repeat(5 - Math.round(c.avg_rating || 0))}</span>
-          <span className="rating-num">{c.avg_rating > 0 ? c.avg_rating.toFixed(1) : 'جديد'}</span>
-          {c.total_reviews > 0 && <span className="review-count">({c.total_reviews})</span>}
-        </div>
-        <span className="cc-exp">{c.years_experience} سنة خبرة</span>
-      </div>
-    </Link>
   )
 }
