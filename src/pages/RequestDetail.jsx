@@ -1,192 +1,113 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
-import { useAuth } from '../context/AuthContext'
 import './RequestDetail.css'
 
-const CAT_LABELS = { cladding:'كلادينج', plumbing:'سباكة', electrical:'كهرباء', demolition:'هدم وبناء', finishing:'تشطيب', painting:'دهانات', flooring:'أرضيات', hvac:'تكييف', general:'عام' }
-const STATUS_MAP  = { open:'مفتوح', in_progress:'قيد التنفيذ', closed:'مغلق', cancelled:'ملغي' }
+const CATEGORY_MAP = {cladding:'كلادينج',plumbing:'سباكة',electrical:'كهرباء',demolition:'هدم',finishing:'تشطيب',painting:'دهان',flooring:'أرضيات',hvac:'تكييف',general:'عام'}
 
 export default function RequestDetail() {
   const { id } = useParams()
   const navigate = useNavigate()
-  const { user, profile } = useAuth()
-  const [request, setRequest]   = useState(null)
-  const [quotes, setQuotes]     = useState([])
-  const [loading, setLoading]   = useState(true)
-  const [myQuote, setMyQuote]   = useState({ price:'', duration_days:'', notes:'' })
-  const [submitting, setSubmit] = useState(false)
-  const [error, setError]       = useState('')
-  const [success, setSuccess]   = useState('')
+  const [request, setRequest] = useState(null)
+  const [quotes, setQuotes] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
+  const [profile, setProfile] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [quoteForm, setQuoteForm] = useState({ price: '', duration_days: '', notes: '' })
+  const [quoteLoading, setQuoteLoading] = useState(false)
+  const [quoteError, setQuoteError] = useState('')
+  const [quoteSent, setQuoteSent] = useState(false)
 
-  useEffect(() => { fetchData() }, [id])
+  useEffect(() => { loadData() }, [id])
 
-  async function fetchData() {
-    const { data: req } = await supabase
-      .from('service_requests')
-      .select('*, users(full_name, city)')
-      .eq('id', id).single()
-    setRequest(req)
-
-    if (req) {
-      const { data: q } = await supabase
-        .from('price_quotes')
-        .select('*, contractor_profiles(id, badge_type, avg_rating, users(full_name))')
-        .eq('request_id', id)
-        .order('created_at', { ascending: true })
-      setQuotes(q || [])
+  async function loadData() {
+    const { data: { user } } = await supabase.auth.getUser()
+    setCurrentUser(user)
+    if (user) {
+      const { data: userData } = await supabase.from('users').select('user_type').eq('id', user.id).single()
+      if (userData?.user_type === 'contractor') {
+        const { data: p } = await supabase.from('contractor_profiles').select('id').eq('user_id', user.id).single()
+        setProfile(p)
+      }
     }
+    const { data: req } = await supabase.from('service_requests').select('*, users!service_requests_client_id_fkey(full_name, city, phone)').eq('id', id).single()
+    setRequest(req)
+    const { data: q } = await supabase.from('price_quotes').select('*, contractor_profiles(user_id, users(full_name, city))').eq('request_id', id).order('created_at', { ascending: false })
+    setQuotes(q || [])
     setLoading(false)
   }
 
-  async function submitQuote() {
-    setError(''); setSuccess('')
-    if (!myQuote.price || !myQuote.duration_days) { setError('أدخل السعر والمدة'); return }
-
-    const { data: cp } = await supabase
-      .from('contractor_profiles')
-      .select('id').eq('user_id', user.id).single()
-    if (!cp) { setError('أكمل ملف المقاول أولاً'); return }
-
-    setSubmit(true)
-    const { error: err } = await supabase.from('price_quotes').insert({
-      request_id: id, contractor_id: cp.id,
-      price: parseFloat(myQuote.price),
-      duration_days: parseInt(myQuote.duration_days),
-      notes: myQuote.notes || null,
-    })
-    if (err) { setError(err.code === '23505' ? 'قدمت عرضاً على هذا الطلب مسبقاً' : 'حدث خطأ، حاول مجدداً') }
-    else { setSuccess('تم تقديم عرضك بنجاح!'); fetchData() }
-    setSubmit(false)
+  async function sendQuote() {
+    setQuoteError(''); setQuoteLoading(true)
+    if (!quoteForm.price) { setQuoteError('أدخل السعر'); setQuoteLoading(false); return }
+    if (!quoteForm.duration_days) { setQuoteError('أدخل مدة التنفيذ'); setQuoteLoading(false); return }
+    const { error } = await supabase.from('price_quotes').insert({ request_id: id, contractor_id: profile.id, price: Number(quoteForm.price), duration_days: Number(quoteForm.duration_days), notes: quoteForm.notes || null, status: 'pending' })
+    setQuoteLoading(false)
+    if (error) { setQuoteError('حدث خطأ'); return }
+    setQuoteSent(true); loadData()
   }
 
-  async function acceptQuote(quoteId, contractorId) {
+  async function acceptQuote(quoteId) {
     await supabase.from('price_quotes').update({ status: 'accepted' }).eq('id', quoteId)
     await supabase.from('price_quotes').update({ status: 'rejected' }).eq('request_id', id).neq('id', quoteId)
     await supabase.from('service_requests').update({ status: 'in_progress' }).eq('id', id)
-    fetchData()
+    loadData()
   }
 
-  if (loading) return <div className="page-loading"><div className="spinner"/></div>
-  if (!request) return <div className="page-loading"><p>الطلب غير موجود</p><Link to="/" className="btn btn-primary">الرئيسية</Link></div>
+  if (loading) return <div className="detail-loading">جاريي...</div>
+  if (!request) return <div className="detail-loading">لم يتم العثور على الطلب</div>
 
-  const isOwner      = user && request.client_id === user.id
-  const isContractor = profile?.user_type === 'contractor'
-  const canQuote     = isContractor && !isOwner && request.status === 'open'
+  const isClient = currentUser?.id === request.client_id
+  const alreadySent = quotes.some(q => q.contractor_id === profile?.id)
 
   return (
-    <div className="request-page">
-      <div className="container">
-
-        <div className="request-grid">
-          {/* ── REQUEST DETAILS ── */}
-          <div className="request-main">
-            <div className="request-card card">
-              <div className="req-header">
-                <div>
-                  <span className={`status-badge status-${request.status}`}>{STATUS_MAP[request.status]}</span>
-                  <span className="cat-label">{CAT_LABELS[request.category]}</span>
-                </div>
-                <h1>{request.title}</h1>
-                <div className="req-meta">
-                  <span>📍 {request.city}{request.district ? ` — ${request.district}` : ''}</span>
-                  <span>👤 {request.users?.full_name}</span>
-                  <span>🕐 {new Date(request.created_at).toLocaleDateString('ar-SA')}</span>
-                </div>
-              </div>
-
-              <div className="req-desc">
-                <h3>تفاصيل الطلب</h3>
-                <p>{request.description}</p>
-              </div>
-
-              {(request.budget_min || request.budget_max) && (
-                <div className="req-budget">
-                  <span>💰 الميزانية:</span>
-                  <strong>
-                    {request.budget_min && `${request.budget_min.toLocaleString()} ريال`}
-                    {request.budget_min && request.budget_max && ' — '}
-                    {request.budget_max && `${request.budget_max.toLocaleString()} ريال`}
-                  </strong>
-                </div>
-              )}
-            </div>
-
-            {/* ── SUBMIT QUOTE ── */}
-            {canQuote && (
-              <div className="quote-form card">
-                <h2>تقديم عرض سعر</h2>
-                <div className="qf-row">
-                  <div className="input-group">
-                    <label>السعر (ريال) *</label>
-                    <input className="input" type="number" placeholder="15000"
-                      value={myQuote.price} onChange={e => setMyQuote(q => ({...q, price: e.target.value}))} />
-                  </div>
-                  <div className="input-group">
-                    <label>مدة التنفيذ (أيام) *</label>
-                    <input className="input" type="number" placeholder="14"
-                      value={myQuote.duration_days} onChange={e => setMyQuote(q => ({...q, duration_days: e.target.value}))} />
-                  </div>
-                </div>
-                <div className="input-group">
-                  <label>ملاحظات إضافية</label>
-                  <textarea className="input" rows={3} placeholder="أي شروط أو ملاحظات خاصة بعرضك..."
-                    value={myQuote.notes} onChange={e => setMyQuote(q => ({...q, notes: e.target.value}))} />
-                </div>
-                {error   && <p className="error-msg">{error}</p>}
-                {success && <p className="success-msg">{success}</p>}
-                <button className="btn btn-primary" onClick={submitQuote} disabled={submitting}>
-                  {submitting ? <span className="spinner-sm"/> : 'إرسال العرض'}
-                </button>
-              </div>
-            )}
-
-            {!user && (
-              <div className="login-prompt card">
-                <p>سجّل دخول كمقاول لتقديم عرض سعر</p>
-                <Link to="/login" className="btn btn-primary">تسجيل الدخول</Link>
-              </div>
-            )}
+    <div className="detail-page" dir="rtl">
+      <div className="detail-container">
+        <button className="back-btn" onClick={() => navigate(-1)}>← رجوع</button>
+        <div className="detail-card">
+          <div className="detail-header">
+            <span className="detail-cat">{CATEGORY_MAP[request.category] || request.category}</span>
+            <span className={'detail-status ' + request.status}>{request.status === 'open' ? 'مفتوح' : request.status === 'in_progress' ? 'جاري' : 'مغلق'}</span>
           </div>
-
-          {/* ── QUOTES LIST ── */}
-          {(isOwner || quotes.length > 0) && (
-            <div className="quotes-panel">
-              <h2 className="quotes-title">عروض الأسعار ({quotes.length})</h2>
-              {quotes.length === 0 ? (
-                <div className="card empty-quotes">
-                  <p>لا توجد عروض بعد</p>
-                </div>
-              ) : quotes.map(q => (
-                <div key={q.id} className={`quote-card card ${q.status === 'accepted' ? 'accepted' : q.status === 'rejected' ? 'rejected' : ''}`}>
-                  <div className="qc-header">
-                    <div className="qc-contractor">
-                      <div className="qc-avatar">{q.contractor_profiles?.users?.full_name?.charAt(0) || 'م'}</div>
-                      <div>
-                        <strong>{q.contractor_profiles?.users?.full_name}</strong>
-                        {q.contractor_profiles?.avg_rating > 0 && (
-                          <span className="qc-rating">⭐ {q.contractor_profiles.avg_rating.toFixed(1)}</span>
-                        )}
-                      </div>
-                    </div>
-                    {q.status === 'accepted' && <span className="accepted-badge">✓ مقبول</span>}
-                  </div>
-                  <div className="qc-details">
-                    <span className="qc-price">{q.price?.toLocaleString()} ريال</span>
-                    <span className="qc-duration">⏱ {q.duration_days} يوم</span>
-                  </div>
-                  {q.notes && <p className="qc-notes">{q.notes}</p>}
-                  {isOwner && q.status === 'pending' && request.status === 'open' && (
-                    <button className="btn btn-accent btn-sm" onClick={() => acceptQuote(q.id, q.contractor_id)}>
-                      قبول هذا العرض
-                    </button>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
+          <h1 className="detail-title">{request.title}</h1>
+          <p className="detail-desc">{request.description}</p>
+          <div className="detail-meta">
+            <span>📍 {request.city}{request.district ? ' - ' + request.district : ''}</span>
+            <span>👤 {request.users?.full_name}</span>
+            {request.budget_min && <span>💰 {request.budget_min?.toLocaleString()} - {request.budget_max?.toLocaleString()} ريال</span>}
+          </div>
+          {request.images?.length > 0 && <div className="detail-images">{request.images.map((img, i) => <img key={i} src={img} alt="" className="detail-img" />)}</div>}
         </div>
 
+        {profile && request.status === 'open' && !alreadySent && !quoteSent && (
+          <div className="quote-form-card">
+            <h2>إرسال عرض سعر</h2>
+            <div className="quote-fields">
+              <div className="field"><label>السعر (ريال) *</label><input type="number" placeholder="15000" value={quoteForm.price} onChange={e=>setQuoteForm(p=>({...p,price:e.target.value}))} /></div>
+              <div className="field"><label>مدة التنفيذ (يوم) *</label><input type="number" placeholder="30" value={quoteForm.duration_days} onChange={e=>setQuoteForm(p=>({...p,duration_days:e.target.value}))} /></div>
+            </div>
+            <div className="field"><label>ملاحظات</label><textarea rows={3} placeholder="تفاصيل إضافية..." value={quoteForm.notes} onChange={e=>setQuoteForm(p=>({...p,notes:e.target.value}))} /></div>
+            {quoteError && <div className="req-error">⚠️ {quoteError}</div>}
+            <button className="submit-quote-btn" onClick={sendQuote} disabled={quoteLoading}>{quoteLoading?'جاريي...':'إرسال العرض'}</button>
+          </div>
+        )}
+        {(alreadySent || quoteSent) && profile && <div className="quote-sent">✅ تم إرسال عرضك بنجاح</div>}
+
+        <div className="quotes-section">
+          <h2>العروض ({quotes.length})</h2>
+          {quotes.length === 0 ? <p className="no-quotes">لم يصل أي عرض بعد</p> : quotes.map(q => (
+            <div key={q.id} className={'quote-item ' + q.status}>
+              <div className="quote-top">
+                <div><div className="quote-contractor">{q.contractor_profiles?.users?.full_name}</div><div className="quote-location">📍 {q.contractor_profiles?.users?.city}</div></div>
+                <div className="quote-price-badge">💰 {q.price?.toLocaleString()} ريال</div>
+              </div>
+              <div className="quote-days">⏱ {q.duration_days} يوم</div>
+              {q.notes && <div className="quote-note">{q.notes}</div>}
+              {isClient && request.status === 'open' && q.status === 'pending' && <button className="accept-btn" onClick={() => acceptQuote(q.id)}>✔ قبول العرض</button>}
+              {q.status === 'accepted' && <div className="accepted-badge">✅ مقبول</div>}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
