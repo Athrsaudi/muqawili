@@ -6,3 +6,5 @@
 .city-chip-dark{padding:6px 14px;border-radius:20px;border:1.5px solid rgba(255,255,255,.12);background:rgba(255,255,255,.05);color:#94a3b8;font-size:13px;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .15s}
 .city-chip-dark.active{background:#1d4ed8;border-color:#3b82f6;color:#fff;font-weight:600}
 .city-chip-dark:hover{border-color:#3b82f6;color:#e2e8f0}
+
+.profile-saved-banner{background:#d1fae5;border:1px solid #6ee7b7;color:#065f46;padding:10px 14px;border-radius:10px;font-size:14px;margin-bottom:16px;}
