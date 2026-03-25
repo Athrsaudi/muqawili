@@ -18,13 +18,13 @@ export default function Login(){
   const[rNid,setRNid]=useState('')
   const[utype,setUtype]=useState('client')
   const[city,setCity]=useState('')
-  async function login(){
+  async function doLogin(){
     setError('');setLoading(true)
     if(!phone.trim()||!nid.trim()){setError('أدخل رقم الجوال ورقم الهوية');setLoading(false);return}
     const p=fmt(phone)
     const{data:u}=await supabase.from('users').select('id,user_type,is_active').eq('phone',p).eq('national_id',nid).maybeSingle()
     if(!u){setError('رقم الجوال أو رقم الهوية غير صحيح');setLoading(false);return}
-    if(u.is_active===false){setError('تم تعليق هذا الحساب. تواصل مع الدعم');setLoading(false);return}
+    if(u.is_active===false){setError('تم تعليق هذا الحساب. تواصل مع الدعم.');setLoading(false);return}
     const fe=nid+p.replace('+','')+'@mq.sa'
     const{error:e1}=await supabase.auth.signInWithPassword({email:fe,password:nid})
     if(!e1){u.user_type==='contractor'?nav('/dashboard/contractor'):nav('/');setLoading(false);return}
@@ -35,7 +35,7 @@ export default function Login(){
     if(e3){setError('تم إنشاء الحساب، حاول مرة أخرى');setLoading(false);return}
     u.user_type==='contractor'?nav('/dashboard/contractor'):nav('/');setLoading(false)
   }
-  async function register(){
+  async function doRegister(){
     setError('');setLoading(true)
     if(!name.trim()){setError('أدخل اسمك الكامل');setLoading(false);return}
     const p=fmt(rPhone)
@@ -67,7 +67,7 @@ export default function Login(){
             <div className='field'><label>رقم الجوال</label><input type='tel' placeholder='05xxxxxxxx' value={phone} onChange={e=>setPhone(e.target.value)}/></div>
             <div className='field'><label>رقم الهوية الوطنية</label><input type='text' placeholder='1xxxxxxxxx' value={nid} onChange={e=>setNid(e.target.value)} maxLength={10}/></div>
             {error&&<div className='auth-error'>⚠️ {error}</div>}
-            <button className='auth-btn' onClick={login} disabled={loading}>{loading?<span className='spinner'/>:'دخول'}</button>
+            <button className='auth-btn' onClick={doLogin} disabled={loading}>{loading?<span className='spinner'/>:'دخول'}</button>
           </div>}
           {tab==='register'&&<div className='auth-form'>
             <div className='field'><label>الاسم الكامل</label><input type='text' value={name} onChange={e=>setName(e.target.value)}/></div>
@@ -77,7 +77,7 @@ export default function Login(){
             <div className='field'><label>المدينة</label><select value={city} onChange={e=>setCity(e.target.value)}><option value=''>اختر مدينتك</option>{CITIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             <div className='field'><label>نوع الحساب</label><div className='type-group'><button type='button' className={'type-btn '+(utype==='client'?'active':'')} onClick={()=>setUtype('client')}>🏠 صاحب عمل</button><button type='button' className={'type-btn '+(utype==='contractor'?'active':'')} onClick={()=>setUtype('contractor')}>🔧 مقاول</button></div></div>
             {error&&<div className='auth-error'>⚠️ {error}</div>}
-            <button className='auth-btn' onClick={register} disabled={loading}>{loading?<span className='spinner'/>:'إنشاء الحساب'}</button>
+            <button className='auth-btn' onClick={doRegister} disabled={loading}>{loading?<span className='spinner'/>:'إنشاء الحساب'}</button>
           </div>}
         </div>
         <p className='auth-footer'>بالدخول أنت توافق على شروط الاستخدام</p>
