@@ -3,18 +3,52 @@ import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import './ContractorDashboard.css'
 const CAT={cladding:'كلادينج',plumbing:'سباكة',electrical:'كهرباء',demolition:'هدم',finishing:'تشطيب',painting:'دهان',flooring:'أرضيات',hvac:'تكييف',general:'عام'}
+const ALL_CITIES=['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها','حائل','القصيم','نجران','جازان']
 function ProfileTab({user,profile,onUpdate}){
   const[bio,setBio]=useState(profile?.bio||'')
   const[years,setYears]=useState(profile?.years_experience||0)
   const[avail,setAvail]=useState(profile?.is_available??true)
+  const[workCities,setWorkCities]=useState([])
   const[saving,setSaving]=useState(false)
   const[saved,setSaved]=useState(false)
-  async function save(){setSaving(true);await supabase.from('contractor_profiles').update({bio,years_experience:years,is_available:avail}).eq('user_id',user.id);setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2000);onUpdate()}
+  useEffect(()=>{
+    if(profile?.id){
+      supabase.from('contractor_areas').select('city').eq('contractor_id',profile.id)
+        .then(({data})=>setWorkCities((data||[]).map(r=>r.city)))
+    }
+  },[profile?.id])
+  function toggleCity(c){
+    setWorkCities(prev=>prev.includes(c)?prev.filter(x=>x!==c):[...prev,c])
+  }
+  async function save(){
+    if(workCities.length===0){alert('اختر مدينة عمل واحدة على الأقل');return}
+    setSaving(true)
+    await supabase.from('contractor_profiles').update({bio,years_experience:years,is_available:avail}).eq('user_id',user.id)
+    // حذف كل المدن القديمة وإضافة الجديدة
+    await supabase.from('contractor_areas').delete().eq('contractor_id',profile.id)
+    if(workCities.length>0){
+      await supabase.from('contractor_areas').insert(workCities.map(c=>({contractor_id:profile.id,city:c})))
+    }
+    setSaving(false);setSaved(true);setTimeout(()=>setSaved(false),2000);onUpdate()
+  }
   return(
     <div className='profile-form'>
       <div className='form-field'><label>الاسم الكامل</label><input value={user?.full_name||''} disabled className='disabled'/></div>
       <div className='form-field'><label>الجوال</label><input value={user?.phone||''} disabled className='disabled'/></div>
-      <div className='form-field'><label>المدينة</label><input value={user?.city||''} disabled className='disabled'/></div>
+      <div className='form-field'><label>مدينة الإقامة</label><input value={user?.city||''} disabled className='disabled'/></div>
+      <div className='form-field'>
+        <label>مدن العمل <span style={{color:'#94a3b8',fontSize:'12px'}}>(ستصلك إشعارات الطلبات الجديدة في هذه المدن)</span></label>
+        <div className='cities-grid-dark'>
+          {ALL_CITIES.map(c=>(
+            <button key={c} type='button'
+              className={'city-chip-dark '+(workCities.includes(c)?'active':'')}
+              onClick={()=>toggleCity(c)}>
+              {workCities.includes(c)?'✓ ':''}{c}
+            </button>
+          ))}
+        </div>
+        {workCities.length>0&&<p style={{fontSize:'12px',color:'#3b82f6',marginTop:'6px'}}>{workCities.length} مدينة مختارة</p>}
+      </div>
       <div className='form-field'><label>نبذة عنك</label><textarea rows={4} value={bio} onChange={e=>setBio(e.target.value)} placeholder='اكتب نبذة...'/></div>
       <div className='form-field'><label>سنوات الخبرة</label><input type='number' value={years} onChange={e=>setYears(Number(e.target.value))} min={0} max={50}/></div>
       <div className='form-field form-toggle'><label>متاح للعمل</label><button className={'toggle-btn '+(avail?'on':'off')} onClick={()=>setAvail(!avail)}>{avail?'نعم':'لا'}</button></div>
