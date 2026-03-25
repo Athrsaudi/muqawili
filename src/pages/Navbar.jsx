@@ -66,11 +66,14 @@ export default function Navbar(){
                 </div>
               )}
             </div>
-            {profile?.user_type==='contractor'?(
-              <Link to='/dashboard/contractor' className='nav-user'><div className='nav-avatar'>{profile?.full_name?.[0]||'م'}</div></Link>
-            ):(
+            <div className='nav-user-group'>
+              {profile?.user_type==='contractor'?(
+                <Link to='/dashboard/contractor' className='nav-user'><div className='nav-avatar'>{profile?.full_name?.[0]||'م'}</div></Link>
+              ):(
+                <div className='nav-avatar' style={{cursor:'default'}}>{profile?.full_name?.[0]||'م'}</div>
+              )}
               <button className='nav-logout-btn' onClick={logout}>خروج</button>
-            )}
+            </div>
           </>
         ):(
           <Link to='/login' className='nav-login-btn'>دخول</Link>
