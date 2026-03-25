@@ -18,6 +18,11 @@ export default function Login(){
   const[rNid,setRNid]=useState('')
   const[utype,setUtype]=useState('client')
   const[city,setCity]=useState('')
+  // المدن التي يعمل فيها المقاول (متعددة)
+  const[workCities,setWorkCities]=useState([])
+  function toggleWorkCity(c){
+    setWorkCities(prev=>prev.includes(c)?prev.filter(x=>x!==c):[...prev,c])
+  }
   async function doLogin(){
     setError('');setLoading(true)
     if(!phone.trim()||!nid.trim()){setError('أدخل رقم الجوال ورقم الهوية');setLoading(false);return}
@@ -42,6 +47,7 @@ export default function Login(){
     if(p.length<12){setError('أدخل رقم جوال سعودي صحيح');setLoading(false);return}
     if(!rNid.match(/^[12]\d{9}$/)){setError('رقم الهوية 10 أرقام يبدأ بـ 1 أو 2');setLoading(false);return}
     if(!city){setError('اختر مدينتك');setLoading(false);return}
+    if(utype==='contractor'&&workCities.length===0){setError('حدد مدينة عمل واحدة على الأقل');setLoading(false);return}
     const{data:ex}=await supabase.from('users').select('id').or('phone.eq.'+p+',national_id.eq.'+rNid).maybeSingle()
     if(ex){setError('هذا الجوال أو رقم الهوية مسجل مسبقاً');setLoading(false);return}
     const fe=rNid+p.replace('+','')+'@mq.sa'
@@ -50,7 +56,15 @@ export default function Login(){
     await supabase.rpc('confirm_user_email',{user_email:fe})
     const{error:e2}=await supabase.from('users').insert({id:ad.user.id,phone:p,email:email.trim()||null,full_name:name.trim(),national_id:rNid,user_type:utype,city,is_verified:true})
     if(e2){setError(e2.code==='23505'?'هذه البيانات مسجلة مسبقاً':'حدث خطأ، حاول مرة أخرى');setLoading(false);return}
-    if(utype==='contractor'){await supabase.from('contractor_profiles').insert({user_id:ad.user.id,years_experience:0});nav('/dashboard/contractor')}else nav('/')
+    if(utype==='contractor'){
+      const{data:profile}=await supabase.from('contractor_profiles').insert({user_id:ad.user.id,years_experience:0}).select('id').single()
+      // أضف المدن التي يعمل فيها المقاول
+      if(profile?.id&&workCities.length>0){
+        const cityRows=workCities.map(c=>({contractor_id:profile.id,city:c}))
+        await supabase.from('contractor_areas').upsert(cityRows,{onConflict:'contractor_id,city'})
+      }
+      nav('/dashboard/contractor')
+    }else nav('/')
     setLoading(false)
   }
   return(
@@ -74,8 +88,23 @@ export default function Login(){
             <div className='field'><label>البريد الإلكتروني (اختياري)</label><input type='email' value={email} onChange={e=>setEmail(e.target.value)}/></div>
             <div className='field'><label>رقم الجوال</label><input type='tel' placeholder='05xxxxxxxx' value={rPhone} onChange={e=>setRPhone(e.target.value)}/></div>
             <div className='field'><label>رقم الهوية الوطنية</label><input type='text' placeholder='1xxxxxxxxx' value={rNid} onChange={e=>setRNid(e.target.value)} maxLength={10}/></div>
-            <div className='field'><label>المدينة</label><select value={city} onChange={e=>setCity(e.target.value)}><option value=''>اختر مدينتك</option>{CITIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
+            <div className='field'><label>مدينة الإقامة</label><select value={city} onChange={e=>setCity(e.target.value)}><option value=''>اختر مدينتك</option>{CITIES.map(c=><option key={c} value={c}>{c}</option>)}</select></div>
             <div className='field'><label>نوع الحساب</label><div className='type-group'><button type='button' className={'type-btn '+(utype==='client'?'active':'')} onClick={()=>setUtype('client')}>🏠 صاحب عمل</button><button type='button' className={'type-btn '+(utype==='contractor'?'active':'')} onClick={()=>setUtype('contractor')}>🔧 مقاول</button></div></div>
+            {utype==='contractor'&&(
+              <div className='field'>
+                <label>مدن العمل <span style={{color:'#94a3b8',fontSize:'12px'}}>(اختر كل المدن التي تعمل فيها)</span></label>
+                <div className='cities-grid'>
+                  {CITIES.map(c=>(
+                    <button key={c} type='button'
+                      className={'city-chip '+(workCities.includes(c)?'active':'')}
+                      onClick={()=>toggleWorkCity(c)}>
+                      {workCities.includes(c)?'✓ ':''}{c}
+                    </button>
+                  ))}
+                </div>
+                {workCities.length>0&&<p style={{fontSize:'12px',color:'#3b82f6',marginTop:'6px'}}>تم اختيار {workCities.length} مدينة</p>}
+              </div>
+            )}
             {error&&<div className='auth-error'>⚠️ {error}</div>}
             <button className='auth-btn' onClick={doRegister} disabled={loading}>{loading?<span className='spinner'/>:'إنشاء الحساب'}</button>
           </div>}
