@@ -17,6 +17,7 @@ export default function RequestDetail() {
   const [quoteLoading, setQuoteLoading] = useState(false)
   const [quoteError, setQuoteError] = useState('')
   const [quoteSent, setQuoteSent] = useState(false)
+  const [accepting, setAccepting] = useState(false)
 
   useEffect(() => { loadData() }, [id])
 
@@ -30,9 +31,14 @@ export default function RequestDetail() {
         setProfile(p)
       }
     }
-    const { data: req } = await supabase.from('service_requests').select('*, users!service_requests_client_id_fkey(full_name, city, phone)').eq('id', id).single()
+    const { data: req } = await supabase.from('service_requests')
+      .select('*, users!service_requests_client_id_fkey(full_name, city)')
+      .eq('id', id).single()
     setRequest(req)
-    const { data: q } = await supabase.from('price_quotes').select('*, contractor_profiles(user_id, users(full_name, city))').eq('request_id', id).order('created_at', { ascending: false })
+    const { data: q } = await supabase.from('price_quotes')
+      .select('*, contractor_profiles(user_id, users(full_name, city, avg_rating))')
+      .eq('request_id', id)
+      .order('price', { ascending: true })
     setQuotes(q || [])
     setLoading(false)
   }
@@ -41,16 +47,32 @@ export default function RequestDetail() {
     setQuoteError(''); setQuoteLoading(true)
     if (!quoteForm.price) { setQuoteError('أدخل السعر'); setQuoteLoading(false); return }
     if (!quoteForm.duration_days) { setQuoteError('أدخل مدة التنفيذ'); setQuoteLoading(false); return }
-    const { error } = await supabase.from('price_quotes').insert({ request_id: id, contractor_id: profile.id, price: Number(quoteForm.price), duration_days: Number(quoteForm.duration_days), notes: quoteForm.notes || null, status: 'pending' })
+    const { error } = await supabase.from('price_quotes').insert({
+      request_id: id, contractor_id: profile.id,
+      price: Number(quoteForm.price),
+      duration_days: Number(quoteForm.duration_days),
+      notes: quoteForm.notes || null,
+      status: 'pending'
+    })
     setQuoteLoading(false)
-    if (error) { setQuoteError('حدث خطأ'); return }
+    if (error) {
+      if (error.code === '23505') setQuoteError('لقد أرسلت عرضاً على هذا الطلب مسبقاً')
+      else setQuoteError('حدث خطأ، حاول مرة أخرى')
+      return
+    }
     setQuoteSent(true); loadData()
   }
 
   async function acceptQuote(quoteId) {
-    await supabase.from('price_quotes').update({ status: 'accepted' }).eq('id', quoteId)
-    await supabase.from('price_quotes').update({ status: 'rejected' }).eq('request_id', id).neq('id', quoteId)
+    setAccepting(true)
+    // Accept selected quote
+    const { error: e1 } = await supabase.from('price_quotes').update({ status: 'accepted' }).eq('id', quoteId)
+    if (e1) { alert('حدث خطأ في قبول العرض: ' + e1.message); setAccepting(false); return }
+    // Reject all others
+    await supabase.from('price_quotes').update({ status: 'rejected' }).eq('request_id', id).neq('id', quoteId).eq('status', 'pending')
+    // Update request status
     await supabase.from('service_requests').update({ status: 'in_progress' }).eq('id', id)
+    setAccepting(false)
     loadData()
   }
 
@@ -59,26 +81,34 @@ export default function RequestDetail() {
 
   const isClient = currentUser?.id === request.client_id
   const alreadySent = quotes.some(q => q.contractor_id === profile?.id)
+  const STATUS_LABEL = { open: 'مفتوح', in_progress: 'جاري', closed: 'مغلق', cancelled: 'ملغي' }
 
   return (
     <div className="detail-page" dir="rtl">
       <div className="detail-container">
         <button className="back-btn" onClick={() => navigate(-1)}>← رجوع</button>
+
+        {/* Request Card */}
         <div className="detail-card">
           <div className="detail-header">
             <span className="detail-cat">{CATEGORY_MAP[request.category] || request.category}</span>
-            <span className={'detail-status ' + request.status}>{request.status === 'open' ? 'مفتوح' : request.status === 'in_progress' ? 'جاري' : 'مغلق'}</span>
+            <span className={'detail-status ' + request.status}>{STATUS_LABEL[request.status]}</span>
           </div>
           <h1 className="detail-title">{request.title}</h1>
           <p className="detail-desc">{request.description}</p>
           <div className="detail-meta">
             <span>📍 {request.city}{request.district ? ' - ' + request.district : ''}</span>
             <span>👤 {request.users?.full_name}</span>
-            {request.budget_min && <span>💰 {request.budget_min?.toLocaleString()} - {request.budget_max?.toLocaleString()} ريال</span>}
+            {request.budget_min && <span>💰 {Number(request.budget_min).toLocaleString('ar')} - {Number(request.budget_max).toLocaleString('ar')} ريال</span>}
           </div>
-          {request.images?.length > 0 && <div className="detail-images">{request.images.map((img, i) => <img key={i} src={img} alt="" className="detail-img" />)}</div>}
+          {request.images?.length > 0 && (
+            <div className="detail-images">
+              {request.images.map((img, i) => <img key={i} src={img} alt="" className="detail-img" />)}
+            </div>
+          )}
         </div>
 
+        {/* Quote Form - contractors only */}
         {profile && request.status === 'open' && !alreadySent && !quoteSent && (
           <div className="quote-form-card">
             <h2>إرسال عرض سعر</h2>
@@ -93,18 +123,29 @@ export default function RequestDetail() {
         )}
         {(alreadySent || quoteSent) && profile && <div className="quote-sent">✅ تم إرسال عرضك بنجاح</div>}
 
+        {/* Quotes List */}
         <div className="quotes-section">
           <h2>العروض ({quotes.length})</h2>
-          {quotes.length === 0 ? <p className="no-quotes">لم يصل أي عرض بعد</p> : quotes.map(q => (
+          {quotes.length === 0 ? (
+            <p className="no-quotes">لم يصل أي عرض بعد</p>
+          ) : quotes.map(q => (
             <div key={q.id} className={'quote-item ' + q.status}>
               <div className="quote-top">
-                <div><div className="quote-contractor">{q.contractor_profiles?.users?.full_name}</div><div className="quote-location">📍 {q.contractor_profiles?.users?.city}</div></div>
-                <div className="quote-price-badge">💰 {q.price?.toLocaleString()} ريال</div>
+                <div>
+                  <div className="quote-contractor">{q.contractor_profiles?.users?.full_name}</div>
+                  <div className="quote-location">📍 {q.contractor_profiles?.users?.city}</div>
+                </div>
+                <div className="quote-price-badge">💰 {Number(q.price).toLocaleString('ar')} ريال</div>
               </div>
               <div className="quote-days">⏱ {q.duration_days} يوم</div>
               {q.notes && <div className="quote-note">{q.notes}</div>}
-              {isClient && request.status === 'open' && q.status === 'pending' && <button className="accept-btn" onClick={() => acceptQuote(q.id)}>✔ قبول العرض</button>}
-              {q.status === 'accepted' && <div className="accepted-badge">✅ مقبول</div>}
+              {isClient && request.status === 'open' && q.status === 'pending' && (
+                <button className="accept-btn" onClick={() => acceptQuote(q.id)} disabled={accepting}>
+                  {accepting ? 'جاريي...' : '✔ قبول هذا العرض'}
+                </button>
+              )}
+              {q.status === 'accepted' && <div className="accepted-badge">✅ تم قبول هذا العرض</div>}
+              {q.status === 'rejected' && <div className="rejected-badge">❌ مرفوض</div>}
             </div>
           ))}
         </div>
