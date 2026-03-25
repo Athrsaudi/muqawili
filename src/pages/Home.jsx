@@ -1,147 +1,109 @@
-import { useState } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
+import { supabase } from '../lib/supabase'
 import './Home.css'
 
 const CATEGORIES = [
-  { key: 'cladding',    label: 'كلادينج',        icon: '🏗️' },
-  { key: 'plumbing',   label: 'سباكة',           icon: '🔧' },
-  { key: 'electrical', label: 'كهرباء',          icon: '⚡' },
-  { key: 'demolition', label: 'هدم وبناء',       icon: '🪚' },
-  { key: 'finishing',  label: 'تشطيب',           icon: '🏠' },
-  { key: 'painting',   label: 'دهانات',          icon: '🎨' },
-  { key: 'flooring',   label: 'أرضيات',          icon: '🪵' },
-  { key: 'hvac',       label: 'تكييف وتهوية',    icon: '❄️' },
-  { key: 'general',    label: 'مقاولات عامة',    icon: '🏢' },
+  { value: 'cladding', label: 'كلادينج', icon: '🏗️' },
+  { value: 'plumbing', label: 'سباكة', icon: '🚧' },
+  { value: 'electrical', label: 'كهرباء', icon: '⚡' },
+  { value: 'demolition', label: 'هدم', icon: '💥' },
+  { value: 'finishing', label: 'تشطيب', icon: '🎨' },
+  { value: 'painting', label: 'دهان', icon: '🖌️' },
+  { value: 'flooring', label: 'أرضيات', icon: '🧱' },
+  { value: 'hvac', label: 'تكييف', icon: '❄️' },
+  { value: 'general', label: 'عام', icon: '🔧' },
 ]
 
-const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة المنورة','الدمام','الخبر','تبوك','أبها']
-
-const HOW_IT_WORKS = [
-  { icon: '📋', title: 'انشر طلبك',        desc: 'حدد نوع الخدمة والمنطقة ووصف ما تحتاجه' },
-  { icon: '📨', title: 'استقبل العروض',     desc: 'يصلك عروض أسعار حقيقية من مقاولين في منطقتك' },
-  { icon: '🤝', title: 'اختر الأنسب',       desc: 'قارن العروض وملفات المقاولين وتواصل معهم مباشرة' },
-]
-
-const STATS = [
-  { value: '٥٠٠+', label: 'مقاول مسجّل' },
-  { value: '١٢+',  label: 'تخصص مختلف' },
-  { value: '١٠+',  label: 'مدن في المملكة' },
-  { value: '٩٨٪',  label: 'نسبة رضا العملاء' },
-]
+const CATEGORY_LABEL = { cladding:'كلادينج', plumbing:'سباكة', electrical:'كهرباء', demolition:'هدم', finishing:'تشطيب', painting:'دهان', flooring:'أرضيات', hvac:'تكييف', general:'عام' }
 
 export default function Home() {
   const navigate = useNavigate()
-  const [city, setCity]         = useState('')
-  const [category, setCategory] = useState('')
+  const [stats, setStats] = useState({ contractors: 0, requests: 0 })
+  const [recentRequests, setRecentRequests] = useState([])
+  const [searchQ, setSearchQ] = useState('')
 
-  function handleSearch() {
-    const params = new URLSearchParams()
-    if (city)     params.set('city', city)
-    if (category) params.set('category', category)
-    navigate(`/search?${params.toString()}`)
+  useEffect(() => { loadStats() }, [])
+
+  async function loadStats() {
+    const [contractorsRes, requestsRes] = await Promise.all([
+      supabase.from('contractor_profiles').select('id', { count: 'exact', head: true }),
+      supabase.from('service_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
+    ])
+    const { data: recent } = await supabase.from('service_requests')
+      .select('id, title, category, city, created_at')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(6)
+    setStats({ contractors: contractorsRes.count || 0, requests: requestsRes.count || 0 })
+    setRecentRequests(recent || [])
   }
 
   return (
-    <div className="home">
-
-      {/* ── HERO ── */}
+    <div className="home" dir="rtl">
       <section className="hero">
-        <div className="container hero-inner">
-          <div className="hero-text">
-            <h1>ابحث عن مقاول <span className="hero-highlight">موثوق</span> في منطقتك</h1>
-            <p>منصة مقاولي تربطك بمقاولين محترفين في جميع التخصصات — احصل على عروض أسعار حقيقية وقارن بينها بسهولة</p>
+        <div className="hero-bg" />
+        <div className="hero-content">
+          <h1 className="hero-title">ابحث عن مقاول موثوق في منطقتك</h1>
+          <p className="hero-sub">احصل على عروض أسعار حقيقية من مقاولين محترفين في جميع أنحاء المملكة</p>
+          <div className="hero-search">
+            <input type="text" placeholder="ماذا تحتاج؟ مثال: تركيب كلادينج..." value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && navigate('/search?q=' + searchQ)} />
+            <button onClick={() => navigate('/search?q=' + searchQ)}>بحث</button>
           </div>
-
-          <div className="hero-search card">
-            <div className="search-row">
-              <div className="input-group search-field">
-                <label>نوع الخدمة</label>
-                <select className="input" value={category} onChange={e => setCategory(e.target.value)}>
-                  <option value="">جميع التخصصات</option>
-                  {CATEGORIES.map(c => <option key={c.key} value={c.key}>{c.icon} {c.label}</option>)}
-                </select>
-              </div>
-              <div className="input-group search-field">
-                <label>المدينة</label>
-                <select className="input" value={city} onChange={e => setCity(e.target.value)}>
-                  <option value="">جميع المدن</option>
-                  {CITIES.map(c => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              <button className="btn btn-primary btn-lg search-btn" onClick={handleSearch}>
-                🔍 ابحث الآن
-              </button>
-            </div>
+          <div className="hero-btns">
+            <Link to="/requests/new" className="hero-btn-primary">أنشئ طلبًا مجانًا</Link>
+            <Link to="/search" className="hero-btn-secondary">تصفح الطلبات</Link>
           </div>
         </div>
       </section>
 
-      {/* ── STATS ── */}
-      <section className="stats-bar">
-        <div className="container stats-inner">
-          {STATS.map((s, i) => (
-            <div key={i} className="stat-item">
-              <span className="stat-value">{s.value}</span>
-              <span className="stat-label">{s.label}</span>
-            </div>
-          ))}
+      <section className="stats-section">
+        <div className="stats-row">
+          <div className="stat-item"><span className="stat-num">{stats.contractors}+</span><span className="stat-lbl">مقاول مسجل</span></div>
+          <div className="stat-item"><span className="stat-num">{stats.requests}+</span><span className="stat-lbl">طلب مفتوح</span></div>
+          <div className="stat-item"><span className="stat-num">12</span><span className="stat-lbl">مدينة سعودية</span></div>
         </div>
       </section>
 
-      {/* ── CATEGORIES ── */}
-      <section className="section categories-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>تخصصاتنا</h2>
-            <p>نغطي جميع أعمال البناء والمقاولات</p>
-          </div>
-          <div className="categories-grid">
+      <section className="section">
+        <div className="section-container">
+          <h2 className="section-title">تصفح حسب التخصص</h2>
+          <div className="cats-grid">
             {CATEGORIES.map(cat => (
-              <Link
-                key={cat.key}
-                to={`/search?category=${cat.key}`}
-                className="category-card card"
-              >
-                <span className="cat-icon">{cat.icon}</span>
-                <span className="cat-label">{cat.label}</span>
+              <Link key={cat.value} to={'/search?category=' + cat.value} className="cat-item">
+                <span className="cat-emoji">{cat.icon}</span>
+                <span className="cat-name">{cat.label}</span>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ── HOW IT WORKS ── */}
-      <section className="section how-section">
-        <div className="container">
-          <div className="section-header">
-            <h2>كيف تعمل المنصة؟</h2>
-            <p>ثلاث خطوات بسيطة للحصول على مقاولك</p>
-          </div>
-          <div className="how-grid">
-            {HOW_IT_WORKS.map((h, i) => (
-              <div key={i} className="how-card card">
-                <div className="how-num">{i + 1}</div>
-                <div className="how-icon">{h.icon}</div>
-                <h3>{h.title}</h3>
-                <p>{h.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── CTA ── */}
-      <section className="section cta-section">
-        <div className="container">
-          <div className="cta-card">
-            <div className="cta-text">
-              <h2>هل أنت مقاول؟</h2>
-              <p>سجّل في المنصة مجاناً وابدأ في استقبال طلبات من منطقتك — بدون سجل تجاري مطلوب</p>
+      {recentRequests.length > 0 && (
+        <section className="section">
+          <div className="section-container">
+            <div className="section-header">
+              <h2 className="section-title">آخر الطلبات</h2>
+              <Link to="/search" className="see-all">عرض الكل ←</Link>
             </div>
-            <Link to="/login" className="btn btn-accent btn-lg">
-              سجّل الآن مجاناً
-            </Link>
+            <div className="recent-grid">
+              {recentRequests.map(req => (
+                <Link key={req.id} to={'/requests/' + req.id} className="recent-card">
+                  <span className="recent-cat">{CATEGORY_LABEL[req.category] || req.category}</span>
+                  <h3 className="recent-title">{req.title}</h3>
+                  <span className="recent-city">📍 {req.city}</span>
+                </Link>
+              ))}
+            </div>
           </div>
+        </section>
+      )}
+
+      <section className="cta-section">
+        <div className="cta-content">
+          <h2>أنت مقاول؟</h2>
+          <p>سجّل الآن واحصل على عملاء جدد في منطقتك</p>
+          <Link to="/login" className="cta-btn">سجّل كمقاول مجانًا</Link>
         </div>
       </section>
     </div>
