@@ -18,7 +18,7 @@ function ProfileTab({user,profile,onUpdate}){
       <div className='form-field'><label>نبذة عنك</label><textarea rows={4} value={bio} onChange={e=>setBio(e.target.value)} placeholder='اكتب نبذة...'/></div>
       <div className='form-field'><label>سنوات الخبرة</label><input type='number' value={years} onChange={e=>setYears(Number(e.target.value))} min={0} max={50}/></div>
       <div className='form-field form-toggle'><label>متاح للعمل</label><button className={'toggle-btn '+(avail?'on':'off')} onClick={()=>setAvail(!avail)}>{avail?'نعم':'لا'}</button></div>
-      <button className='save-btn' onClick={save} disabled={saving}>{saving?'جارٍ...':saved?'✅ تم الحفظ':'حفظ التغييرات'}</button>
+      <button className='save-btn' onClick={save} disabled={saving}>{saving?'جارِ...':saved?'✅ تم الحفظ':'حفظ التغييرات'}</button>
     </div>
   )
 }
@@ -28,7 +28,7 @@ function PortfolioTab({contractorId}){
   const[showForm,setShowForm]=useState(false)
   const[title,setTitle]=useState('')
   const[desc,setDesc]=useState('')
-  const[url,setUrl]=useState('')
+  const[imgUrl,setImgUrl]=useState('')
   const[saving,setSaving]=useState(false)
   const[err,setErr]=useState('')
   useEffect(()=>{if(contractorId)load()},[contractorId])
@@ -39,38 +39,38 @@ function PortfolioTab({contractorId}){
   async function add(){
     setErr('')
     if(!title.trim()){setErr('أدخل عنوان العمل');return}
-    if(!url.trim()){setErr('أدخل رابط الصورة');return}
+    if(!imgUrl.trim()){setErr('أدخل رابط الصورة');return}
     setSaving(true)
-    const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url:url.trim()})
+    const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url:imgUrl.trim()})
     setSaving(false)
     if(error){setErr('حدث خطأ أثناء الحفظ');return}
-    setTitle('');setDesc('');setUrl('');setShowForm(false);load()
+    setTitle('');setDesc('');setImgUrl('');setShowForm(false);load()
   }
-  async function del(id){await supabase.from('contractor_portfolio').delete().eq('id',id);load()}
+  async function del(id){if(!confirm('حذف هذا العمل?'))return;await supabase.from('contractor_portfolio').delete().eq('id',id);load()}
   if(loading)return <div className='empty-state'>جارٍ التحميل...</div>
   return(
     <div>
-      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:16}}>
-        <span style={{color:'#94a3b8',fontSize:14}}>{items.length} عمل مضاف</span>
+      <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+        <span style={{color:'#94a3b8',fontSize:'14px'}}>{items.length} عمل</span>
         <button className='add-portfolio-btn' onClick={()=>setShowForm(!showForm)}>{showForm?'إلغاء':'+ إضافة عمل جديد'}</button>
       </div>
       {showForm&&(
         <div className='portfolio-add-form'>
           <div className='field'><label>عنوان العمل *</label><input type='text' placeholder='مثال: تركيب كلادينج' value={title} onChange={e=>setTitle(e.target.value)}/></div>
           <div className='field'><label>وصف العمل</label><textarea rows={2} value={desc} onChange={e=>setDesc(e.target.value)}/></div>
-          <div className='field'><label>رابط صورة العمل *</label><input type='url' placeholder='https://...' value={url} onChange={e=>setUrl(e.target.value)}/></div>
+          <div className='field'><label>رابط صورة العمل *</label><input type='url' placeholder='https://...' value={imgUrl} onChange={e=>setImgUrl(e.target.value)}/></div>
           {err&&<div className='req-error'>⚠️ {err}</div>}
           <button className='save-btn' onClick={add} disabled={saving}>{saving?'جارٍ...':'إضافة العمل'}</button>
         </div>
       )}
       {items.length===0&&!showForm?(
-        <div className='empty-state'>لا توجد أعمال. اضغط «+ إضافة عمل جديد»!</div>
+        <div className='empty-state'>لا توجد أعمال. اضغط + إضافة عمل جديد!</div>
       ):(
         <div className='portfolio-grid'>{items.map(i=>(
           <div key={i.id} className='portfolio-card' style={{position:'relative'}}>
             <img src={i.image_url} alt={i.title} className='portfolio-img'/>
             <div className='portfolio-info'><h3>{i.title}</h3>{i.description&&<p>{i.description}</p>}</div>
-            <button onClick={()=>del(i.id)} style={{position:'absolute',top:8,left:8,background:'rgba(239,68,68,.8)',border:'none',borderRadius:6,color:'#fff',padding:'4px 8px',fontSize:12,cursor:'pointer'}}>حذف</button>
+            <button onClick={()=>del(i.id)} style={{position:'absolute',top:'8px',left:'8px',background:'rgba(239,68,68,.85)',border:'none',borderRadius:'6px',color:'#fff',padding:'3px 9px',fontSize:'12px',cursor:'pointer'}}>حذف</button>
           </div>
         ))}</div>
       )}
@@ -138,10 +138,9 @@ export default function ContractorDashboard(){
           <div className='dash-content'>
             <h1 className='dash-title'>مرحباً، {user?.full_name?.split(' ')[0]} 👋</h1>
             <div className='stats-grid'>
-              <div className='stat-card'><div className='stat-icon'>📋</div><div className='stat-value'>{stats.requests}</div><div className='stat-label'>طلبات متاحة</div></div>
-              <div className='stat-card'><div className='stat-icon'>💰</div><div className='stat-value'>{stats.quotes}</div><div className='stat-label'>عروضي</div></div>
-              <div className='stat-card'><div className='stat-icon'>🖼️</div><div className='stat-value'>{stats.portfolio}</div><div className='stat-label'>أعمال منجزة</div></div>
-              <div className='stat-card'><div className='stat-icon'>⭐</div><div className='stat-value'>{stats.rating>0?stats.rating.toFixed(1):'جديد'}</div><div className='stat-label'>التقييم</div></div>
+              {[{icon:'📋',v:stats.requests,l:'طلبات متاحة'},{icon:'💰',v:stats.quotes,l:'عروضي'},{icon:'🖼️',v:stats.portfolio,l:'أعمال منجزة'},{icon:'⭐',v:stats.rating>0?stats.rating.toFixed(1):'جديد',l:'التقييم'}].map((s,i)=>(
+                <div key={i} className='stat-card'><div className='stat-icon'>{s.icon}</div><div className='stat-value'>{s.v}</div><div className='stat-label'>{s.l}</div></div>
+              ))}
             </div>
             <h2 className='section-title'>آخر طلبات الخدمة</h2>
             <div className='requests-list'>
@@ -157,7 +156,7 @@ export default function ContractorDashboard(){
                   </div>
                 </div>
               ))}
-              {requests.length===0&&<p className='empty-state'>لا توجد طلبات حالياً</p>}
+              {!requests.length&&<p className='empty-state'>لا توجد طلبات حالياً</p>}
             </div>
           </div>
         )}
@@ -177,7 +176,7 @@ export default function ContractorDashboard(){
                   </div>
                 </div>
               ))}
-              {requests.length===0&&<p className='empty-state'>لا توجد طلبات حالياً</p>}
+              {!requests.length&&<p className='empty-state'>لا توجد طلبات</p>}
             </div>
           </div>
         )}
