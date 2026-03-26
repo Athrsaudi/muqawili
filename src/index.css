@@ -121,3 +121,54 @@ input, textarea, select { font-family: inherit; }
 /* ── LAYOUT ──────────────────────────────────────────────────── */
 .container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
 .section   { padding: 60px 0; }
+
+
+/* ===== File Uploader & Viewer ===== */
+.file-uploader { margin-top: 12px; }
+.file-uploader-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+.file-uploader-label { font-size: 13px; font-weight: 600; color: #e2e8f0; }
+.file-uploader-count { font-size: 11px; color: #64748b; }
+.file-uploader-error { background: rgba(248,113,113,.12); border: 1px solid #f87171; color: #f87171; padding: 6px 10px; border-radius: 6px; font-size: 12px; margin-bottom: 8px; }
+
+.file-drop-zone {
+  border: 2px dashed #334155;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .2s, background .2s;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.file-drop-zone:hover { border-color: #0ea5e9; background: rgba(14,165,233,.06); }
+.file-drop-icon { font-size: 22px; }
+.file-drop-text { font-size: 13px; color: #e2e8f0; }
+.file-drop-hint { font-size: 11px; color: #64748b; }
+.file-uploading { color: #fbbf24; font-size: 13px; }
+
+.file-list { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.file-item { display: flex; align-items: center; gap: 10px; background: #0f172a; border: 1px solid #334155; border-radius: 8px; padding: 8px 10px; }
+.file-preview-img { width: 44px; height: 44px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.file-preview-video, .file-preview-pdf, .file-preview-generic { width: 44px; height: 44px; border-radius: 6px; background: #1e293b; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
+.file-item-info { flex: 1; min-width: 0; }
+.file-item-name { font-size: 12px; color: #93c5fd; text-decoration: none; display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.file-item-name:hover { text-decoration: underline; }
+.file-item-size { font-size: 11px; color: #64748b; }
+.file-item-remove { background: none; border: none; color: #64748b; cursor: pointer; font-size: 14px; padding: 4px; border-radius: 4px; flex-shrink: 0; }
+.file-item-remove:hover { color: #f87171; background: rgba(248,113,113,.1); }
+
+/* File Viewer */
+.file-viewer { margin-top: 16px; }
+.file-viewer-title { font-size: 13px; font-weight: 600; color: #94a3b8; margin-bottom: 10px; }
+.file-viewer-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px; }
+.file-viewer-item { border-radius: 8px; overflow: hidden; border: 1px solid #334155; background: #0f172a; }
+.file-viewer-img { width: 100%; height: 120px; object-fit: cover; cursor: zoom-in; display: block; }
+.file-viewer-video { width: 100%; max-height: 200px; display: block; }
+.file-viewer-pdf, .file-viewer-generic { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; padding: 16px; color: #93c5fd; text-decoration: none; font-size: 12px; min-height: 80px; }
+.file-viewer-pdf span:first-child, .file-viewer-generic span:first-child { font-size: 28px; }
+.file-viewer-pdf:hover, .file-viewer-generic:hover { background: #1e293b; }
+
+/* Lightbox */
+.file-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.9); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
+.file-lightbox-img { max-width: 90vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
+.file-lightbox-close { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; }
+/* ================================= */
