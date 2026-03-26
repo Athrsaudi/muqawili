@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef} from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import './Navbar.css'
@@ -18,8 +18,22 @@ export default function Navbar() {
     })
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_e, session) => {
       if (session?.user) loadUser(session.user)
-      else { setUser(null); setUserData(null); setUnread(0) }
+      else { setUser(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef(null); setUserData(null); setUnread(0) }
     })
+  useEffect(() => {
+    const h = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setMenuOpen(false); };
+    document.addEventListener('mousedown', h);
+  const handleLogout = async () => {
+    setMenuOpen(false);
+    await supabase.auth.signOut();
+    navigate('/');
+  };
+
+    return () => document.removeEventListener('mousedown', h);
+  }, []);
+
     return () => subscription.unsubscribe()
   }, [])
 
@@ -103,9 +117,39 @@ export default function Navbar() {
             </div>
 
             {/* User */}
-            <Link to={userData?.user_type === 'contractor' ? '/dashboard/contractor' : '/'} className="nav-user">
-              <div className="nav-avatar">{userData?.full_name?.[0] || 'م'}</div>
-            </Link>
+            <div className="nav-user-wrapper" ref={menuRef}>
+              <button
+                className="nav-user"
+                onClick={() => setMenuOpen(o => !o)}
+              >
+                <div className="nav-avatar">
+                  {userData?.full_name?.[0] || 'م'}
+                </div>
+              </button>
+              {menuOpen && (
+                <div className="nav-user-dropdown">
+                  {userData?.user_type === 'contractor' && (
+                    <Link to="/dashboard/contractor" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
+                      <span>🏗️</span> لوحة التحكم
+                    </Link>
+                  )}
+                  {userData?.user_type === 'client' && (
+                    <Link to="/my-requests" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
+                      <span>📋</span> طلباتي
+                    </Link>
+                  )}
+                  {userData?.user_type === 'admin' && (
+                    <Link to="/admin" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
+                      <span>⚙️</span> الإدارة
+                    </Link>
+                  )}
+                  <div className="nav-menu-divider" />
+                  <button className="nav-menu-item nav-menu-logout" onClick={handleLogout}>
+                    <span>🚪</span> تسجيل الخروج
+                  </button>
+                </div>
+              )}
+            </div>
           </>
         ) : (
           <Link to="/login" className="nav-login-btn">دخول</Link>
