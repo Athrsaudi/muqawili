@@ -94,7 +94,7 @@ function PortfolioTab({contractorId}){
     if(!title.trim()){setErr('أدخل عنوان العمل');return}
     if(!imgUrl.trim()){setErr('أدخل رابط الصورة');return}
     setSaving(true)
-    const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url:imgUrl.trim()})
+    const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url: uploadedFiles[0] || imgUrl.trim(), files: uploadedFiles})
     setSaving(false)
     if(error){setErr('حدث خطأ: '+error.message);return}
     setTitle('');setDesc('');setImgUrl('');setShowForm(false);load()
@@ -122,6 +122,9 @@ function PortfolioTab({contractorId}){
         <div className='portfolio-grid'>{items.map(i=>(
           <div key={i.id} className='portfolio-card' style={{position:'relative'}}>
             <img src={i.image_url} alt={i.title} className='portfolio-img'/>
+              {item.files && item.files.length > 1 && (
+                <div className="portfolio-file-count">+{item.files.length - 1} ملفات</div>
+              )}
             <div className='portfolio-info'><h3>{i.title}</h3>{i.description&&<p>{i.description}</p>}</div>
             <button onClick={()=>del(i.id)} style={{position:'absolute',top:'8px',left:'8px',background:'rgba(239,68,68,.85)',border:'none',borderRadius:'6px',color:'#fff',padding:'3px 9px',fontSize:'12px',cursor:'pointer'}}>حذف</button>
           </div>
