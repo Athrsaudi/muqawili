@@ -124,6 +124,9 @@ function PortfolioTab({contractorId}){
         <div className='portfolio-grid'>{items.map(i=>(
           <div key={i.id} className='portfolio-card' style={{position:'relative'}}>
             <img src={i.image_url} alt={i.title} className='portfolio-img'/>
+            {item.files && item.files.length > 0 && (
+              <FileViewer files={item.files} title="" />
+            )}
               {item.files && item.files.length > 1 && (
                 <div className="portfolio-file-count">+{item.files.length - 1} ملفات</div>
               )}
