@@ -1,3 +1,4 @@
+import FileUploader from '../components/FileUploader';
 import FileViewer from '../components/FileViewer';
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
