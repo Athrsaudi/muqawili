@@ -36,7 +36,8 @@ function ProfileTab({user,profile,onUpdate}){
     const{error:e1}=await supabase.from('contractor_profiles')
       .update({bio:bio.trim(),years_experience:years,is_available:avail})
       .eq('user_id',user.id)
-    if(e1){alert('حدث خطأ أثناء الحفظ: '+e1.message);setSaving(false);return}
+    if(e1){alert('حدث خطأ أثناء الحفظ: '+e1.message);
+    if (error) { console.error('Profile save error:', error); }setSaving(false);return}
     // حذف المدن القديمة وإضافة الجديدة
     await supabase.from('contractor_areas').delete().eq('contractor_id',profile.id)
     const{error:e2}=await supabase.from('contractor_areas')
