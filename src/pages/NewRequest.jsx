@@ -53,7 +53,7 @@ export default function NewRequest() {
       district: form.district || null,
       budget_min: form.budget_min ? Number(form.budget_min) : null,
       budget_max: form.budget_max ? Number(form.budget_max) : null,
-      status: 'open',
+      status: 'open', files: uploadedFiles, images: uploadedFiles.filter(u => /\.(jpg|jpeg|png|gif|webp)/i.test(u)),
     }).select().single()
     setLoading(false)
     if (err) { setError('حدث خطأ، حاول مرة أخرى'); return }
@@ -153,7 +153,14 @@ export default function NewRequest() {
             {error && <div className="req-error">⚠️ {error}</div>}
             <div className="step-btns">
               <button className="back-step-btn" onClick={() => setStep(2)}>← رجوع</button>
-              <button className="submit-btn" onClick={handleSubmit} disabled={loading}>{loading ? 'جاريي...' : 'إرسال الطلب ✓'}</button>
+              <FileUploader
+          bucket="request-images"
+          folder={user?.id || 'requests'}
+          label="صور أو ملفات توضيحية"
+          maxFiles={10}
+          onFilesChange={(urls) => setUploadedFiles(urls)}
+        />
+        <button className="submit-btn" onClick={handleSubmit} disabled={loading}>{loading ? 'جاريي...' : 'إرسال الطلب ✓'}</button>
             </div>
           </div>
         )}
