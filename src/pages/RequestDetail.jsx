@@ -96,6 +96,7 @@ export default function RequestDetail() {
           </div>
           <h1 className="detail-title">{request.title}</h1>
           <p className="detail-desc">{request.description}</p>
+          <FileViewer files={[...(request.images || []), ...(request.files || [])]} title="الصور والملفات المرفقة" />
           <div className="detail-meta">
             <span>📍 {request.city}{request.district ? ' - ' + request.district : ''}</span>
             <span>👤 {request.users?.full_name}</span>
