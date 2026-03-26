@@ -73,65 +73,47 @@ export default function Navbar() {
 
   return (
     <nav className="navbar" dir="rtl">
-      <Link to="/" className="nav-logo">🏗️ مقاولي</Link>
-
-      <div className="nav-links">
-        <Link to="/search" className={'nav-link ' + (location.pathname==='/search'?'active':'')}>طلبات</Link>
-        {userData?.user_type === 'client' && (
-          <Link to="/requests/new" className={'nav-link ' + (location.pathname==='/requests/new'?'active':'')}>+ طلب جديد</Link>
-        )}
-        {userData?.user_type === 'contractor' && (
-          <Link to="/dashboard/contractor" className={'nav-link ' + (location.pathname.includes('/dashboard')?'active':'')}>لوحة التحكم</Link>
-        )}
-      </div>
-
-      <div className="nav-actions">
-        {user ? (
-          <>
-            {/* Notifications */}
-            <div className="notif-wrapper">
-              <button className="notif-btn" onClick={() => { setShowNotifs(!showNotifs); if (!showNotifs) markAllRead() }}>
-                🔔
-                {unread > 0 && <span className="notif-badge">{unread > 9 ? '9+' : unread}</span>}
-              </button>
-              {showNotifs && (
-                <div className="notif-dropdown">
-                  <div className="notif-header">
-                    <span>الإشعارات</span>
-                    {unread > 0 && <button onClick={markAllRead} className="mark-read-btn">قراءة الكل</button>}
-                  </div>
-                  {notifs.length === 0 ? (
-                    <div className="no-notifs">لا توجد إشعارات</div>
-                  ) : notifs.map(n => (
-                    <div key={n.id} className={'notif-item ' + (n.is_read ? 'read' : 'unread')} onClick={() => handleNotifClick(n)}>
-                      <span className="notif-icon">{NOTIF_ICONS[n.type] || '🔔'}</span>
-                      <div className="notif-content">
-                        <div className="notif-title">{n.title}</div>
-                        <div className="notif-body">{n.body}</div>
-                        <div className="notif-time">{new Date(n.created_at).toLocaleDateString('ar-SA')}</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* User */}
-            <div className="nav-user-wrapper" ref={menuRef}>
+      <div className="nav-user-wrapper" ref={menuRef}>
               <button
-                className="nav-user"
+                className="nav-avatar-btn"
                 onClick={() => setMenuOpen(o => !o)}
+                aria-label="قائمة المستخدم"
               >
                 <div className="nav-avatar">
-                  {userData?.full_name?.[0] || 'م'}
+                  {userData?.full_name?.[0] || user?.email?.[0]?.toUpperCase() || 'م'}
                 </div>
               </button>
               {menuOpen && (
-                <div className="nav-user-dropdown">
+                <div className="nav-user-dropdown" dir="rtl">
+                  <div className="nav-menu-header">
+                    <span className="nav-menu-name">{userData?.full_name || ''}</span>
+                    <span className="nav-menu-type">
+                      {userData?.user_type === 'contractor' ? 'مقاول' : userData?.user_type === 'client' ? 'عميل' : 'مدير'}
+                    </span>
+                  </div>
+                  <div className="nav-menu-divider" />
                   {userData?.user_type === 'contractor' && (
                     <Link to="/dashboard/contractor" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
-                      <span>🏗️</span> لوحة التحكم
+                      🏗️ لوحة التحكم
                     </Link>
+                  )}
+                  {userData?.user_type === 'client' && (
+                    <Link to="/my-requests" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
+                      📋 طلباتي
+                    </Link>
+                  )}
+                  {userData?.user_type === 'admin' && (
+                    <Link to="/admin" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
+                      ⚙️ لوحة الإدارة
+                    </Link>
+                  )}
+                  <div className="nav-menu-divider" />
+                  <button className="nav-menu-item nav-menu-logout" onClick={handleLogout}>
+                    🚪 تسجيل الخروج
+                  </button>
+                </div>
+              )}
+            </div>
                   )}
                   {userData?.user_type === 'client' && (
                     <Link to="/my-requests" className="nav-menu-item" onClick={() => setMenuOpen(false)}>
