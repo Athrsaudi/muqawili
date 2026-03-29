@@ -1,7 +1,5 @@
 import FileUploader from '../components/FileUploader'
 import FileUploader from '../components/FileUploader'
-;
-;
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
