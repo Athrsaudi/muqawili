@@ -2,8 +2,6 @@ import FileUploader from '../components/FileUploader'
 import FileViewer from '../components/FileViewer'
 import FileUploader from '../components/FileUploader'
 import FileViewer from '../components/FileViewer'
-;
-;
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -43,7 +41,7 @@ function ProfileTab({user,profile,onUpdate}){
       .update({bio:bio.trim(),years_experience:years,is_available:avail})
       .eq('user_id',user.id)
     if(e1){alert('حدث خطأ أثناء الحفظ: '+e1.message);
-    if (error) { console.error('Profile save error:', error); }setSaving(false);return}
+    console.error('Profile save error:', e1);setSaving(false);return}
     // حذف المدن القديمة وإضافة الجديدة
     await supabase.from('contractor_areas').delete().eq('contractor_id',profile.id)
     const{error:e2}=await supabase.from('contractor_areas')
@@ -120,7 +118,7 @@ function PortfolioTab({contractorId}){
           <div className='field'><label>وصف العمل</label><textarea rows={2} value={desc} onChange={e=>setDesc(e.target.value)}/></div>
           <FileUploader
             bucket="portfolio-images"
-            folder={profile?.id || 'portfolio'}
+            folder={contractorId || 'portfolio'}
             label="صور وفيديوهات العمل *"
             maxFiles={8}
             existingFiles={uploadedFiles}
