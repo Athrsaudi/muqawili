@@ -1,0 +1,56 @@
+.admin-loading{display:flex;align-items:center;justify-content:center;min-height:100vh;background:#070b18;color:#64748b;font-family:'Tajawal',sans-serif;font-size:16px}
+.admin-layout{display:flex;min-height:100vh;background:#070b18;font-family:'Tajawal',sans-serif;direction:rtl}
+.admin-sidebar{width:240px;background:#0d1425;border-left:1px solid rgba(99,102,241,.15);display:flex;flex-direction:column;position:sticky;top:0;height:100vh}
+.admin-logo{font-size:18px;font-weight:900;color:#fff;padding:28px 20px 20px;border-bottom:1px solid rgba(255,255,255,.06)}
+.admin-nav{display:flex;flex-direction:column;gap:2px;padding:16px 10px;flex:1}
+.admin-nav-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:10px;border:none;background:transparent;color:#64748b;font-size:14px;font-weight:600;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s;text-align:right;width:100%}
+.admin-nav-item:hover{background:rgba(99,102,241,.08);color:#a5b4fc}
+.admin-nav-item.active{background:rgba(99,102,241,.15);color:#a5b4fc;border:1px solid rgba(99,102,241,.2)}
+.admin-logout{margin:12px;padding:11px 14px;border-radius:10px;border:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.06);color:#f87171;font-size:14px;font-weight:600;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s}
+.admin-logout:hover{background:rgba(239,68,68,.15)}
+.admin-main{flex:1;overflow-y:auto;padding:36px;background:#070b18}
+.admin-content{max-width:1100px;margin:0 auto}
+.admin-title{font-size:26px;font-weight:900;color:#fff;margin-bottom:28px;letter-spacing:-.5px}
+.admin-section-title{font-size:18px;font-weight:700;color:#94a3b8;margin-bottom:16px}
+.admin-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:36px}
+.admin-stat-card{background:#0d1425;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:24px;text-align:center;transition:all .2s}
+.admin-stat-card:hover{border-color:rgba(99,102,241,.3);transform:translateY(-2px)}
+.ast-icon{font-size:28px;margin-bottom:10px}.ast-val{font-size:36px;font-weight:900;color:#fff;margin-bottom:4px}.ast-lbl{font-size:13px;color:#475569}
+.admin-table-wrap{overflow-x:auto;border-radius:16px;border:1px solid rgba(255,255,255,.06)}
+.admin-table{width:100%;border-collapse:collapse;background:#0d1425;font-size:14px}
+.admin-table th{padding:14px 16px;text-align:right;color:#475569;font-weight:700;font-size:12px;text-transform:uppercase;letter-spacing:.5px;border-bottom:1px solid rgba(255,255,255,.06);background:rgba(255,255,255,.02)}
+.admin-table td{padding:14px 16px;color:#cbd5e1;border-bottom:1px solid rgba(255,255,255,.04);vertical-align:middle}
+.admin-table tr:last-child td{border-bottom:none}
+.admin-table tr:hover td{background:rgba(255,255,255,.02)}
+.admin-table tr.row-inactive td{opacity:.5}
+.td-name{font-weight:700;color:#fff}
+.type-badge{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.type-badge.contractor{background:rgba(99,102,241,.15);color:#a5b4fc}
+.type-badge.client{background:rgba(34,197,94,.12);color:#4ade80}
+.type-badge.admin{background:rgba(239,68,68,.15);color:#f87171}
+.status-dot{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.status-dot.active{background:rgba(34,197,94,.12);color:#4ade80}
+.status-dot.inactive{background:rgba(239,68,68,.12);color:#f87171}
+.rating-badge{color:#fbbf24;font-size:13px;font-weight:600}.no-rating{color:#334155}
+.badge-select{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#e2e8f0;padding:6px 10px;font-size:13px;font-family:'Tajawal',sans-serif;cursor:pointer;outline:none}
+.verify-btn{padding:6px 14px;border-radius:8px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.05);color:#64748b;font-size:13px;font-weight:600;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+.verify-btn:hover{border-color:rgba(34,197,94,.4);color:#4ade80}
+.verify-btn.verified{background:rgba(34,197,94,.12);border-color:rgba(34,197,94,.3);color:#4ade80}
+.toggle-active-btn{padding:6px 14px;border-radius:8px;border:none;font-size:13px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s;white-space:nowrap}
+.toggle-active-btn.deactivate{background:rgba(239,68,68,.12);color:#f87171}
+.toggle-active-btn.deactivate:hover{background:rgba(239,68,68,.2)}
+.toggle-active-btn.activate{background:rgba(34,197,94,.12);color:#4ade80}
+.toggle-active-btn.activate:hover{background:rgba(34,197,94,.2)}
+.toggle-active-btn:disabled,.verify-btn:disabled,.badge-select:disabled{opacity:.5;cursor:not-allowed}
+.req-status{padding:4px 10px;border-radius:99px;font-size:12px;font-weight:700}
+.req-status.open{background:rgba(99,102,241,.15);color:#a5b4fc}
+.req-status.in_progress{background:rgba(251,191,36,.15);color:#fbbf24}
+.req-status.closed{background:rgba(100,116,139,.15);color:#64748b}
+.req-status.cancelled{background:rgba(239,68,68,.15);color:#f87171}
+.req-link{color:#93c5fd;text-decoration:none;font-weight:600}
+.req-link:hover{text-decoration:underline}
+.close-req-btn{padding:6px 14px;border-radius:8px;border:none;background:rgba(239,68,68,.12);color:#f87171;font-size:13px;font-weight:700;font-family:'Tajawal',sans-serif;cursor:pointer;transition:all .2s}
+.close-req-btn:hover{background:rgba(239,68,68,.2)}
+.close-req-btn:disabled{opacity:.5;cursor:not-allowed}
+.admin-recent{margin-top:32px}
+@media(max-width:768px){.admin-layout{flex-direction:column}.admin-sidebar{width:100%;height:auto;position:static}.admin-nav{flex-direction:row;flex-wrap:wrap}.admin-stats{grid-template-columns:repeat(2,1fr)}.admin-main{padding:16px}}
