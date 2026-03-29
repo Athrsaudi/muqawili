@@ -1,6 +1,5 @@
 import FileViewer from '../components/FileViewer'
 import FileViewer from '../components/FileViewer'
-;
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
