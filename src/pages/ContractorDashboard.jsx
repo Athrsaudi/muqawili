@@ -1,5 +1,7 @@
-import FileViewer from '../components/FileViewer';
-import FileUploader from '../components/FileUploader';
+import FileUploader from '../components/FileUploader'
+import FileViewer from '../components/FileViewer'
+;
+;
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -97,7 +99,7 @@ function PortfolioTab({contractorId}){
     if(!title.trim()){setErr('أدخل عنوان العمل');return}
     if(uploadedFiles.length===0){setErr('أرفق صورة أو ملف واحد على الأقل');return}
     setSaving(true)
-    const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url: uploadedFiles[0] || imgUrl.trim(), files: uploadedFiles})
+    const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url: uploadedFiles[0] || '', files: uploadedFiles})
     setSaving(false)
     if(error){setErr('حدث خطأ: '+error.message);return}
     setTitle('');setDesc('');setImgUrl('');setUploadedFiles([]);setShowForm(false);load()
