@@ -1,5 +1,7 @@
 import FileUploader from '../components/FileUploader'
 import FileViewer from '../components/FileViewer'
+import FileUploader from '../components/FileUploader'
+import FileViewer from '../components/FileViewer'
 ;
 ;
 import { useState, useEffect } from 'react'
