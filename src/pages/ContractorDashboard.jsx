@@ -86,6 +86,7 @@ function PortfolioTab({contractorId}){
   const[imgUrl,setImgUrl]=useState('')
   const[saving,setSaving]=useState(false)
   const[err,setErr]=useState('')
+  const[uploadedFiles,setUploadedFiles]=useState([])
   useEffect(()=>{if(contractorId)load()},[contractorId])
   async function load(){
     const{data}=await supabase.from('contractor_portfolio').select('*').eq('contractor_id',contractorId).order('created_at',{ascending:false})
@@ -94,12 +95,12 @@ function PortfolioTab({contractorId}){
   async function add(){
     setErr('')
     if(!title.trim()){setErr('أدخل عنوان العمل');return}
-    if(!imgUrl.trim()){setErr('أدخل رابط الصورة');return}
+    if(uploadedFiles.length===0){setErr('أرفق صورة أو ملف واحد على الأقل');return}
     setSaving(true)
     const{error}=await supabase.from('contractor_portfolio').insert({contractor_id:contractorId,title:title.trim(),description:desc.trim()||null,image_url: uploadedFiles[0] || imgUrl.trim(), files: uploadedFiles})
     setSaving(false)
     if(error){setErr('حدث خطأ: '+error.message);return}
-    setTitle('');setDesc('');setImgUrl('');setShowForm(false);load()
+    setTitle('');setDesc('');setImgUrl('');setUploadedFiles([]);setShowForm(false);load()
   }
   async function del(id){if(!confirm('حذف هذا العمل?'))return;await supabase.from('contractor_portfolio').delete().eq('id',id);load()}
   if(loading)return <div className='empty-state'>جارٍ التحميل...</div>
