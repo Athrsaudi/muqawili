@@ -22,6 +22,8 @@ const CITIES = ['جدة','الرياض','مكة المكرمة','المدينة 
 export default function NewRequest() {
   const navigate = useNavigate()
   const [step, setStep] = useState(1)
+  const [uploadedFiles, setUploadedFiles] = useState([])
+  const [currentUser, setCurrentUser] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [form, setForm] = useState({
@@ -34,13 +36,17 @@ export default function NewRequest() {
     budget_max: '',
   })
 
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => setCurrentUser(user))
+  }, [])
+
   function update(field, value) {
     setForm(prev => ({ ...prev, [field]: value }))
   }
 
   async function handleSubmit() {
     setError(''); setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const user = currentUser
     if (!user) { navigate('/login'); return }
     if (!form.title.trim()) { setError('أدخل عنوان الطلب'); setLoading(false); return }
     if (!form.description.trim()) { setError('أدخل وصف الطلب'); setLoading(false); return }
@@ -157,7 +163,7 @@ export default function NewRequest() {
               <button className="back-step-btn" onClick={() => setStep(2)}>← رجوع</button>
               <FileUploader
           bucket="request-images"
-          folder={user?.id || 'requests'}
+          folder={currentUser?.id || 'requests'}
           label="صور أو ملفات توضيحية"
           maxFiles={10}
           onFilesChange={(urls) => setUploadedFiles(urls)}
