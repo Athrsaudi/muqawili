@@ -32,13 +32,13 @@ export default function Login(){
     if(u.is_active===false){setError('تم تعليق هذا الحساب. تواصل مع الدعم.');setLoading(false);return}
     const fe=nid+p.replace('+','')+'@mq.sa'
     const{error:e1}=await supabase.auth.signInWithPassword({email:fe,password:nid})
-    if(!e1){u.user_type==='contractor'?nav('/dashboard/contractor'):nav('/');setLoading(false);return}
+    if(!e1){u.user_type==='contractor'?nav('/dashboard/contractor'):u.user_type==='admin'?nav('/admin'):nav('/');setLoading(false);return}
     const{error:e2}=await supabase.auth.signUp({email:fe,password:nid})
     if(e2){setError('حدث خطأ في تسجيل الدخول');setLoading(false);return}
     await supabase.rpc('confirm_user_email',{user_email:fe})
     const{error:e3}=await supabase.auth.signInWithPassword({email:fe,password:nid})
     if(e3){setError('تم إنشاء الحساب، حاول مرة أخرى');setLoading(false);return}
-    u.user_type==='contractor'?nav('/dashboard/contractor'):nav('/');setLoading(false)
+    u.user_type==='contractor'?nav('/dashboard/contractor'):u.user_type==='admin'?nav('/admin'):nav('/');setLoading(false)
   }
   async function doRegister(){
     setError('');setLoading(true)
