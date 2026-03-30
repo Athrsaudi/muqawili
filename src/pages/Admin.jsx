@@ -1,13 +1,19 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { supabase } from '../lib/supabase'
+import { supabase } from '../../lib/supabase'
 import './Admin.css'
+
+const CAT_LABELS = {
+  cladding: 'كلادينج', plumbing: 'سباكة', electrical: 'كهرباء',
+  demolition: 'هدم', finishing: 'تشطيب', painting: 'دهان',
+  flooring: 'أرضيات', hvac: 'تكييف', general: 'عام'
+}
 
 export default function AdminPanel() {
   const navigate = useNavigate()
   const [tab, setTab] = useState('overview')
   const [loading, setLoading] = useState(true)
-  const [stats, setStats] = useState({ users: 0, contractors: 0, clients: 0, requests: 0 })
+  const [stats, setStats] = useState({ users: 0, contractors: 0, clients: 0, requests: 0, openRequests: 0, quotes: 0, reviews: 0 })
   const [users, setUsers] = useState([])
   const [requests, setRequests] = useState([])
   const [actionLoading, setActionLoading] = useState(null)
@@ -24,139 +30,235 @@ export default function AdminPanel() {
 
   async function loadData() {
     setLoading(true)
-    const [usersRes, requestsRes] = await Promise.all([
-      supabase.from('users').select('*, contractor_profiles(id, avg_rating, total_reviews, badge_type)').order('created_at', { ascending: false }),
-      supabase.from('service_requests').select('*, users!service_requests_client_id_fkey(full_name)').order('created_at', { ascending: false })
+    const [usersRes, reqRes, quotesRes, reviewsRes] = await Promise.all([
+      supabase.from('users').select('*, contractor_profiles(id, avg_rating, total_reviews, badge_type, is_available)').order('created_at', { ascending: false }),
+      supabase.from('service_requests').select('*, users!service_requests_client_id_fkey(full_name)').order('created_at', { ascending: false }),
+      supabase.from('price_quotes').select('id', { count: 'exact', head: true }),
+      supabase.from('reviews').select('id', { count: 'exact', head: true })
     ])
     const allUsers = usersRes.data || []
+    const allReqs = reqRes.data || []
     setUsers(allUsers)
-    setRequests(requestsRes.data || [])
+    setRequests(allReqs)
     setStats({
       users: allUsers.length,
       contractors: allUsers.filter(u => u.user_type === 'contractor').length,
       clients: allUsers.filter(u => u.user_type === 'client').length,
-      requests: requestsRes.data?.length || 0,
+      requests: allReqs.length,
+      openRequests: allReqs.filter(r => r.status === 'open').length,
+      quotes: quotesRes.count || 0,
+      reviews: reviewsRes.count || 0
     })
     setLoading(false)
   }
 
-  async function toggleActive(userId, current) {
+  async function toggleActive(userId, currentActive) {
     setActionLoading(userId + '-active')
-    await supabase.from('users').update({ is_active: !current }).eq('id', userId)
-    await loadData(); setActionLoading(null)
+    await supabase.from('users').update({ is_active: !currentActive }).eq('id', userId)
+    await loadData()
+    setActionLoading(null)
   }
 
-  async function toggleVerified(userId, current) {
-    setActionLoading(userId + '-verified')
-    await supabase.from('users').update({ is_verified: !current }).eq('id', userId)
-    await loadData(); setActionLoading(null)
+  async function toggleVerified(userId, currentVerified) {
+    setActionLoading(userId + '-verify')
+    await supabase.from('users').update({ is_verified: !currentVerified }).eq('id', userId)
+    await loadData()
+    setActionLoading(null)
   }
 
-  async function setBadge(contractorId, badge) {
-    setActionLoading(contractorId + '-badge')
-    await supabase.from('contractor_profiles').update({ badge_type: badge }).eq('id', contractorId)
-    await loadData(); setActionLoading(null)
+  async function changeBadge(contractorProfileId, badge) {
+    setActionLoading(contractorProfileId + '-badge')
+    await supabase.from('contractor_profiles').update({ badge_type: badge }).eq('id', contractorProfileId)
+    await loadData()
+    setActionLoading(null)
   }
 
-  async function closeRequest(requestId) {
-    setActionLoading(requestId + '-close')
-    await supabase.from('service_requests').update({ status: 'closed' }).eq('id', requestId)
-    await loadData(); setActionLoading(null)
+  async function closeRequest(reqId) {
+    setActionLoading(reqId + '-close')
+    await supabase.from('service_requests').update({ status: 'closed' }).eq('id', reqId)
+    await loadData()
+    setActionLoading(null)
   }
 
-  async function logout() { await supabase.auth.signOut(); navigate('/') }
+  async function deleteRequest(reqId) {
+    if (!confirm('هل أنت متأكد من حذف هذا الطلب؟')) return
+    setActionLoading(reqId + '-delete')
+    await supabase.from('price_quotes').delete().eq('request_id', reqId)
+    await supabase.from('service_requests').delete().eq('id', reqId)
+    await loadData()
+    setActionLoading(null)
+  }
 
-  if (loading) return <div className='admin-loading'>جارٍ التحميل...</div>
+  async function handleLogout() {
+    await supabase.auth.signOut()
+    navigate('/')
+  }
+
+  if (loading) return (
+    <div className="admin-loading-screen">
+      <div className="admin-loading-spinner"></div>
+      <p>جارٍ تحميل لوحة الإدارة...</p>
+    </div>
+  )
 
   const contractors = users.filter(u => u.user_type === 'contractor')
   const clients = users.filter(u => u.user_type === 'client')
 
+  const TABS = [
+    { id: 'overview', icon: '📊', label: 'نظرة عامة' },
+    { id: 'contractors', icon: '🏗️', label: 'المقاولون' },
+    { id: 'clients', icon: '👤', label: 'العملاء' },
+    { id: 'requests', icon: '📋', label: 'الطلبات' },
+  ]
+
   return (
-    <div className='admin-layout' dir='rtl'>
-      <aside className='admin-sidebar'>
-        <div className='admin-logo'>⚙️ لوحة الإدارة</div>
-        <nav className='admin-nav'>
-          {[
-            { id: 'overview', label: '📊 نظرة عامة' },
-            { id: 'contractors', label: '🏗️ المقاولون' },
-            { id: 'clients', label: '👤 العملاء' },
-            { id: 'requests', label: '📋 الطلبات' },
-          ].map(t => (
-            <button key={t.id} className={'admin-nav-item ' + (tab === t.id ? 'active' : '')} onClick={() => setTab(t.id)}>
-              {t.label}
+    <div className="admin-page" dir="rtl">
+      {/* Sidebar */}
+      <aside className="admin-sidebar">
+        <div className="admin-sidebar-header">
+          <span className="admin-sidebar-icon">⚙️</span>
+          <span className="admin-sidebar-title">لوحة الإدارة</span>
+        </div>
+        <nav className="admin-sidebar-nav">
+          {TABS.map(t => (
+            <button
+              key={t.id}
+              className={'admin-sidebar-btn' + (tab === t.id ? ' active' : '')}
+              onClick={() => setTab(t.id)}
+            >
+              <span className="admin-sidebar-btn-icon">{t.icon}</span>
+              <span className="admin-sidebar-btn-label">{t.label}</span>
             </button>
           ))}
         </nav>
-        <button className='admin-logout' onClick={logout}>🚪 خروج</button>
+        <button className="admin-sidebar-logout" onClick={handleLogout}>
+          🚪 تسجيل الخروج
+        </button>
       </aside>
 
-      <main className='admin-main'>
+      {/* Main */}
+      <main className="admin-main">
 
+        {/* ======= OVERVIEW ======= */}
         {tab === 'overview' && (
-          <div className='admin-content'>
-            <h1 className='admin-title'>نظرة عامة</h1>
-            <div className='admin-stats'>
-              <div className='admin-stat-card'><div className='ast-icon'>👥</div><div className='ast-val'>{stats.users}</div><div className='ast-lbl'>المستخدمون</div></div>
-              <div className='admin-stat-card'><div className='ast-icon'>🏗️</div><div className='ast-val'>{stats.contractors}</div><div className='ast-lbl'>مقاولون</div></div>
-              <div className='admin-stat-card'><div className='ast-icon'>👤</div><div className='ast-val'>{stats.clients}</div><div className='ast-lbl'>عملاء</div></div>
-              <div className='admin-stat-card'><div className='ast-icon'>📋</div><div className='ast-val'>{stats.requests}</div><div className='ast-lbl'>طلبات</div></div>
+          <div className="admin-panel">
+            <h1 className="admin-page-title">نظرة عامة</h1>
+            <div className="admin-stats-grid">
+              {[
+                { icon: '👥', val: stats.users, label: 'إجمالي المستخدمين', color: '#3b82f6' },
+                { icon: '🏗️', val: stats.contractors, label: 'مقاول', color: '#f59e0b' },
+                { icon: '👤', val: stats.clients, label: 'عميل', color: '#10b981' },
+                { icon: '📋', val: stats.requests, label: 'طلب', color: '#8b5cf6' },
+                { icon: '📂', val: stats.openRequests, label: 'طلب مفتوح', color: '#06b6d4' },
+                { icon: '💬', val: stats.quotes, label: 'عرض سعر', color: '#ec4899' },
+                { icon: '⭐', val: stats.reviews, label: 'تقييم', color: '#f97316' },
+              ].map((s, i) => (
+                <div className="admin-stat-box" key={i} style={{ '--accent': s.color }}>
+                  <div className="admin-stat-icon">{s.icon}</div>
+                  <div className="admin-stat-val">{s.val}</div>
+                  <div className="admin-stat-label">{s.label}</div>
+                </div>
+              ))}
             </div>
-            <div className='admin-recent'>
-              <h2 className='admin-section-title'>أحدث المستخدمين</h2>
-              <div className='admin-table-wrap'>
-                <table className='admin-table'>
-                  <thead><tr><th>الاسم</th><th>النوع</th><th>المدينة</th><th>الحالة</th><th>التاريخ</th></tr></thead>
-                  <tbody>
-                    {users.slice(0, 10).map(u => (
-                      <tr key={u.id}>
-                        <td className='td-name'>{u.full_name}</td>
-                        <td><span className={'type-badge ' + u.user_type}>{u.user_type === 'contractor' ? 'مقاول' : u.user_type === 'client' ? 'عميل' : 'مدير'}</span></td>
-                        <td>{u.city}</td>
-                        <td><span className={'status-dot ' + (u.is_active ? 'active' : 'inactive')}>{u.is_active ? 'نشط' : 'موقوف'}</span></td>
-                        <td>{new Date(u.created_at).toLocaleDateString('ar-SA')}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+
+            <h2 className="admin-section-heading">أحدث المستخدمين</h2>
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>النوع</th>
+                    <th>المدينة</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.slice(0, 8).map(u => (
+                    <tr key={u.id}>
+                      <td className="admin-td-name">{u.full_name}</td>
+                      <td>
+                        <span className={'admin-type-badge ' + u.user_type}>
+                          {u.user_type === 'contractor' ? 'مقاول' : u.user_type === 'client' ? 'عميل' : 'مدير'}
+                        </span>
+                      </td>
+                      <td>{u.city}</td>
+                      <td>
+                        <span className={'admin-status-dot ' + (u.is_active ? 'active' : 'inactive')}>
+                          {u.is_active ? 'نشط' : 'موقوف'}
+                        </span>
+                      </td>
+                      <td className="admin-td-date">{new Date(u.created_at).toLocaleDateString('ar-SA')}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
         )}
 
+        {/* ======= CONTRACTORS ======= */}
         {tab === 'contractors' && (
-          <div className='admin-content'>
-            <h1 className='admin-title'>المقاولون ({contractors.length})</h1>
-            <div className='admin-table-wrap'>
-              <table className='admin-table'>
-                <thead><tr><th>الاسم</th><th>الجوال</th><th>المدينة</th><th>التقييم</th><th>الشارة</th><th>موثق</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <div className="admin-panel">
+            <h1 className="admin-page-title">المقاولون ({contractors.length})</h1>
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>الجوال</th>
+                    <th>المدينة</th>
+                    <th>التقييم</th>
+                    <th>الشارة</th>
+                    <th>موثق</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {contractors.map(u => (
-                    <tr key={u.id} className={!u.is_active ? 'row-inactive' : ''}>
-                      <td className='td-name'>{u.full_name}</td>
-                      <td>{u.phone}</td>
+                    <tr key={u.id} className={u.is_active ? '' : 'admin-row-inactive'}>
+                      <td className="admin-td-name">{u.full_name}</td>
+                      <td className="admin-td-phone">{u.phone}</td>
                       <td>{u.city}</td>
-                      <td>{u.contractor_profiles?.avg_rating > 0 ? <span className='rating-badge'>⭐ {Number(u.contractor_profiles.avg_rating).toFixed(1)}</span> : <span className='no-rating'>—</span>}</td>
                       <td>
-                        <select className='badge-select' value={u.contractor_profiles?.badge_type || 'none'}
+                        {u.contractor_profiles?.avg_rating > 0
+                          ? <span className="admin-rating">⭐ {Number(u.contractor_profiles.avg_rating).toFixed(1)}</span>
+                          : <span className="admin-no-rating">—</span>
+                        }
+                      </td>
+                      <td>
+                        <select
+                          className="admin-badge-select"
+                          value={u.contractor_profiles?.badge_type || 'none'}
                           disabled={actionLoading === u.contractor_profiles?.id + '-badge'}
-                          onChange={e => setBadge(u.contractor_profiles?.id, e.target.value)}>
-                          <option value='none'>بدون</option>
-                          <option value='trusted'>موثوق</option>
-                          <option value='verified'>موثق</option>
+                          onChange={e => changeBadge(u.contractor_profiles?.id, e.target.value)}
+                        >
+                          <option value="none">بدون</option>
+                          <option value="trusted">موثوق</option>
+                          <option value="verified">موثق</option>
                         </select>
                       </td>
                       <td>
-                        <button className={'verify-btn ' + (u.is_verified ? 'verified' : '')}
+                        <button
+                          className={'admin-verify-btn ' + (u.is_verified ? 'verified' : '')}
                           onClick={() => toggleVerified(u.id, u.is_verified)}
-                          disabled={actionLoading === u.id + '-verified'}>
+                          disabled={actionLoading === u.id + '-verify'}
+                        >
                           {u.is_verified ? '✓ موثق' : 'توثيق'}
                         </button>
                       </td>
-                      <td><span className={'status-dot ' + (u.is_active ? 'active' : 'inactive')}>{u.is_active ? 'نشط' : 'موقوف'}</span></td>
                       <td>
-                        <button className={'toggle-active-btn ' + (u.is_active ? 'deactivate' : 'activate')}
+                        <span className={'admin-status-dot ' + (u.is_active ? 'active' : 'inactive')}>
+                          {u.is_active ? 'نشط' : 'موقوف'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className={'admin-toggle-btn ' + (u.is_active ? 'deactivate' : 'activate')}
                           onClick={() => toggleActive(u.id, u.is_active)}
-                          disabled={actionLoading === u.id + '-active'}>
+                          disabled={actionLoading === u.id + '-active'}
+                        >
                           {u.is_active ? 'إيقاف' : 'تفعيل'}
                         </button>
                       </td>
@@ -168,30 +270,48 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* ======= CLIENTS ======= */}
         {tab === 'clients' && (
-          <div className='admin-content'>
-            <h1 className='admin-title'>العملاء ({clients.length})</h1>
-            <div className='admin-table-wrap'>
-              <table className='admin-table'>
-                <thead><tr><th>الاسم</th><th>الجوال</th><th>المدينة</th><th>موثق</th><th>الحالة</th><th>إجراء</th></tr></thead>
+          <div className="admin-panel">
+            <h1 className="admin-page-title">العملاء ({clients.length})</h1>
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>الاسم</th>
+                    <th>الجوال</th>
+                    <th>المدينة</th>
+                    <th>موثق</th>
+                    <th>الحالة</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {clients.map(u => (
-                    <tr key={u.id} className={!u.is_active ? 'row-inactive' : ''}>
-                      <td className='td-name'>{u.full_name}</td>
-                      <td>{u.phone}</td>
+                    <tr key={u.id} className={u.is_active ? '' : 'admin-row-inactive'}>
+                      <td className="admin-td-name">{u.full_name}</td>
+                      <td className="admin-td-phone">{u.phone}</td>
                       <td>{u.city}</td>
                       <td>
-                        <button className={'verify-btn ' + (u.is_verified ? 'verified' : '')}
+                        <button
+                          className={'admin-verify-btn ' + (u.is_verified ? 'verified' : '')}
                           onClick={() => toggleVerified(u.id, u.is_verified)}
-                          disabled={actionLoading === u.id + '-verified'}>
+                          disabled={actionLoading === u.id + '-verify'}
+                        >
                           {u.is_verified ? '✓ موثق' : 'توثيق'}
                         </button>
                       </td>
-                      <td><span className={'status-dot ' + (u.is_active ? 'active' : 'inactive')}>{u.is_active ? 'نشط' : 'موقوف'}</span></td>
                       <td>
-                        <button className={'toggle-active-btn ' + (u.is_active ? 'deactivate' : 'activate')}
+                        <span className={'admin-status-dot ' + (u.is_active ? 'active' : 'inactive')}>
+                          {u.is_active ? 'نشط' : 'موقوف'}
+                        </span>
+                      </td>
+                      <td>
+                        <button
+                          className={'admin-toggle-btn ' + (u.is_active ? 'deactivate' : 'activate')}
                           onClick={() => toggleActive(u.id, u.is_active)}
-                          disabled={actionLoading === u.id + '-active'}>
+                          disabled={actionLoading === u.id + '-active'}
+                        >
                           {u.is_active ? 'إيقاف' : 'تفعيل'}
                         </button>
                       </td>
@@ -203,21 +323,56 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* ======= REQUESTS ======= */}
         {tab === 'requests' && (
-          <div className='admin-content'>
-            <h1 className='admin-title'>الطلبات ({requests.length})</h1>
-            <div className='admin-table-wrap'>
-              <table className='admin-table'>
-                <thead><tr><th>العنوان</th><th>العميل</th><th>المدينة</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+          <div className="admin-panel">
+            <h1 className="admin-page-title">الطلبات ({requests.length})</h1>
+            <div className="admin-table-container">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>العنوان</th>
+                    <th>العميل</th>
+                    <th>التصنيف</th>
+                    <th>المدينة</th>
+                    <th>الحالة</th>
+                    <th>التاريخ</th>
+                    <th>إجراء</th>
+                  </tr>
+                </thead>
                 <tbody>
                   {requests.map(r => (
                     <tr key={r.id}>
-                      <td className='td-name'><a href={'/requests/' + r.id} target='_blank' rel='noopener noreferrer' className='req-link'>{r.title}</a></td>
+                      <td className="admin-td-name">
+                        <a href={'/requests/' + r.id} className="admin-req-link">{r.title}</a>
+                      </td>
                       <td>{r.users?.full_name}</td>
+                      <td><span className="admin-cat-badge">{CAT_LABELS[r.category] || r.category}</span></td>
                       <td>{r.city}</td>
-                      <td><span className={'req-status ' + r.status}>{r.status === 'open' ? 'مفتوح' : r.status === 'in_progress' ? 'جارٍ' : r.status === 'closed' ? 'مغلق' : 'ملغي'}</span></td>
-                      <td>{new Date(r.created_at).toLocaleDateString('ar-SA')}</td>
-                      <td>{r.status === 'open' && <button className='close-req-btn' onClick={() => closeRequest(r.id)} disabled={actionLoading === r.id + '-close'}>إغلاق</button>}</td>
+                      <td>
+                        <span className={'admin-req-status ' + r.status}>
+                          {r.status === 'open' ? 'مفتوح' : r.status === 'in_progress' ? 'جارٍ' : r.status === 'closed' ? 'مغلق' : 'ملغي'}
+                        </span>
+                      </td>
+                      <td className="admin-td-date">{new Date(r.created_at).toLocaleDateString('ar-SA')}</td>
+                      <td className="admin-td-actions">
+                        {r.status === 'open' && (
+                          <button
+                            className="admin-close-btn"
+                            onClick={() => closeRequest(r.id)}
+                            disabled={actionLoading === r.id + '-close'}
+                          >
+                            إغلاق
+                          </button>
+                        )}
+                        <button
+                          className="admin-delete-btn"
+                          onClick={() => deleteRequest(r.id)}
+                          disabled={actionLoading === r.id + '-delete'}
+                        >
+                          حذف
+                        </button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -225,7 +380,6 @@ export default function AdminPanel() {
             </div>
           </div>
         )}
-
       </main>
     </div>
   )
