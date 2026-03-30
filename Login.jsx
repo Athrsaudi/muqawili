@@ -55,7 +55,7 @@ export default function Login() {
       if (retryErr) { setError('حدث خطأ في تسجيل الدخول'); setLoading(false); return }
     }
 
-    user.user_type === 'contractor' ? navigate('/dashboard/contractor') : navigate('/')
+    user.user_type === 'contractor' ? navigate('/dashboard/contractor') : userData?.user_type==="admin" ? navigate('/admin') : navigate('/') // replaced
     setLoading(false)
   }
 
