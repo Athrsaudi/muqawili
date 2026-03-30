@@ -7,7 +7,6 @@ import NewRequest from './pages/NewRequest'
 import RequestDetail from './pages/RequestDetail'
 import ContractorDashboard from './pages/ContractorDashboard'
 import ContractorProfile from './pages/ContractorProfile'
-import AdminDashboard from './pages/AdminDashboard'
 import AdminPanel from './pages/Admin'
 import MyRequests from './pages/MyRequests'
 
@@ -23,7 +22,8 @@ export default function App() {
         <Route path="/requests/:id" element={<RequestDetail />} />
         <Route path="/dashboard/contractor" element={<ContractorDashboard />} />
         <Route path="/contractors/:id" element={<ContractorProfile />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin" element={<AdminPanel />} />
+        <Route path="/my-requests" element={<MyRequests />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
