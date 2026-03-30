@@ -25,7 +25,7 @@ export default function AdminPanel() {
   async function loadData() {
     setLoading(true)
     const [usersRes, requestsRes] = await Promise.all([
-      supabase.from('users').select('*, contractor_profiles(id, avg_rating, total_reviews, badge_type, is_available)').order('created_at', { ascending: false }),
+      supabase.from('users').select('*, contractor_profiles(id, avg_rating, total_reviews, badge_type)').order('created_at', { ascending: false }),
       supabase.from('service_requests').select('*, users!service_requests_client_id_fkey(full_name)').order('created_at', { ascending: false })
     ])
     const allUsers = usersRes.data || []
@@ -95,9 +95,9 @@ export default function AdminPanel() {
             <div className='admin-recent'><h2 className='admin-section-title'>أحدث المستخدمين</h2>
               <div className='admin-table-wrap'><table className='admin-table'>
                 <thead><tr><th>الاسم</th><th>النوع</th><th>المدينة</th><th>الحالة</th><th>التاريخ</th></tr></thead>
-                <tbody>{users.slice(0,8).map(u=>(
+                <tbody>{users.slice(0,10).map(u=>(
                   <tr key={u.id}>
-                    <td>{u.full_name}</td>
+                    <td className='td-name'>{u.full_name}</td>
                     <td><span className={'type-badge '+u.user_type}>{u.user_type==='contractor'?'مقاول':u.user_type==='client'?'عميل':'مدير'}</span></td>
                     <td>{u.city}</td>
                     <td><span className={'status-dot '+(u.is_active?'active':'inactive')}>{u.is_active?'نشط':'موقوف'}</span></td>
@@ -118,7 +118,7 @@ export default function AdminPanel() {
                   <td className='td-name'>{u.full_name}</td>
                   <td>{u.phone}</td>
                   <td>{u.city}</td>
-                  <td>{u.contractor_profiles?.avg_rating>0?<span className='rating-badge'>⭐ {Number(u.contractor_profiles.avg_rating).toFixed(1)} ({u.contractor_profiles.total_reviews})</span>:<span className='no-rating'>—</span>}</td>
+                  <td>{u.contractor_profiles?.avg_rating>0?<span className='rating-badge'>⭐ {Number(u.contractor_profiles.avg_rating).toFixed(1)}</span>:<span className='no-rating'>—</span>}</td>
                   <td><select className='badge-select' value={u.contractor_profiles?.badge_type||'none'} disabled={actionLoading===u.contractor_profiles?.id+'-badge'} onChange={e=>setBadge(u.contractor_profiles?.id,e.target.value)}>
                     <option value='none'>بدون</option><option value='trusted'>موثوق</option><option value='verified'>موثق</option>
                   </select></td>
@@ -150,11 +150,11 @@ export default function AdminPanel() {
           <div className='admin-content'>
             <h1 className='admin-title'>الطلبات ({requests.length})</h1>
             <div className='admin-table-wrap'><table className='admin-table'>
-              <thead><tr><th>العنوان</th><th>العميل</th><th>المدينة</th><th>التصنيف</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
+              <thead><tr><th>العنوان</th><th>العميل</th><th>المدينة</th><th>الحالة</th><th>التاريخ</th><th>إجراء</th></tr></thead>
               <tbody>{requests.map(r=>(
                 <tr key={r.id}>
                   <td className='td-name'><a href={'/requests/'+r.id} target='_blank' rel='noopener noreferrer' className='req-link'>{r.title}</a></td>
-                  <td>{r.users?.full_name}</td><td>{r.city}</td><td>{r.category}</td>
+                  <td>{r.users?.full_name}</td><td>{r.city}</td>
                   <td><span className={'req-status '+r.status}>{r.status==='open'?'مفتوح':r.status==='in_progress'?'جارٍ':r.status==='closed'?'مغلق':'ملغي'}</span></td>
                   <td>{new Date(r.created_at).toLocaleDateString('ar-SA')}</td>
                   <td>{r.status==='open'&&<button className='close-req-btn' onClick={()=>closeRequest(r.id)} disabled={actionLoading===r.id+'-close'}>إغلاق</button>}</td>
