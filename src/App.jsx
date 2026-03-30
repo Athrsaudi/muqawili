@@ -8,6 +8,8 @@ import RequestDetail from './pages/RequestDetail'
 import ContractorDashboard from './pages/ContractorDashboard'
 import ContractorProfile from './pages/ContractorProfile'
 import AdminDashboard from './pages/AdminDashboard'
+import AdminPanel from './pages/Admin'
+import MyRequests from './pages/MyRequests'
 
 export default function App() {
   return (
