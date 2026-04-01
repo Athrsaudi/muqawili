@@ -44,8 +44,8 @@ export default function Home() {
       <section className="hero">
         <div className="hero-bg" />
         <div className="hero-content">
-          <h1 className="hero-title">ابحث عن مقاول موثوق في منطقتك</h1>
-          <p className="hero-sub">احصل على عروض أسعار حقيقية من مقاولين محترفين في جميع أنحاء المملكة</p>
+          <h1 className="hero-title">ابحث عن مزود خدمة موثوق في منطقتك</h1>
+          <p className="hero-sub">احصل على عروض أسعار حقيقية من خدماتين محترفين في جميع أنحاء المملكة</p>
           <div className="hero-search">
             <input type="text" placeholder="ماذا تحتاج؟ مثال: تركيب كلادينج..." value={searchQ} onChange={e => setSearchQ(e.target.value)} onKeyDown={e => e.key === 'Enter' && navigate('/search?q=' + searchQ)} />
             <button onClick={() => navigate('/search?q=' + searchQ)}>بحث</button>
@@ -59,7 +59,7 @@ export default function Home() {
 
       <section className="stats-section">
         <div className="stats-row">
-          <div className="stat-item"><span className="stat-num">{stats.contractors}+</span><span className="stat-lbl">مقاول مسجل</span></div>
+          <div className="stat-item"><span className="stat-num">{stats.contractors}+</span><span className="stat-lbl">مزود خدمة مسجل</span></div>
           <div className="stat-item"><span className="stat-num">{stats.requests}+</span><span className="stat-lbl">طلب مفتوح</span></div>
           <div className="stat-item"><span className="stat-num">12</span><span className="stat-lbl">مدينة سعودية</span></div>
         </div>
@@ -101,7 +101,7 @@ export default function Home() {
 
       <section className="cta-section">
         <div className="cta-content">
-          <h2>أنت مقاول؟</h2>
+          <h2>أنت مزود خدمة؟</h2>
           <p>سجّل الآن واحصل على عملاء جدد في منطقتك</p>
           <Link to="/login" className="cta-btn">سجّل كمقاول مجانًا</Link>
         </div>

@@ -3,16 +3,63 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import './Navbar.css'
 
+// ── شعار خدماتي SVG ──
+function Logo() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 52" height="40" width="auto">
+      <defs>
+        <linearGradient id="ng" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stopColor="#C8922A"/>
+          <stop offset="50%"  stopColor="#E8B84B"/>
+          <stop offset="100%" stopColor="#A67420"/>
+        </linearGradient>
+        <linearGradient id="nbg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%"   stopColor="#2D1A00"/>
+          <stop offset="100%" stopColor="#1A0F00"/>
+        </linearGradient>
+      </defs>
+      {/* أيقونة البرج */}
+      <rect x="2" y="2" width="48" height="48" rx="11" fill="url(#nbg)" stroke="url(#ng)" strokeWidth="1.2"/>
+      <rect x="14" y="18" width="6"  height="6"  rx="1" fill="url(#ng)"/>
+      <rect x="22" y="13" width="8"  height="11" rx="1" fill="url(#ng)"/>
+      <rect x="32" y="18" width="6"  height="6"  rx="1" fill="url(#ng)"/>
+      <rect x="13" y="23" width="26" height="20" rx="2" fill="url(#ng)" fillOpacity=".12" stroke="url(#ng)" strokeWidth="1"/>
+      <rect x="20" y="28" width="12" height="9"  rx="2" fill="none" stroke="url(#ng)" strokeWidth=".9"/>
+      <path d="M20 32 Q26 26 32 32" fill="none" stroke="url(#ng)" strokeWidth=".9"/>
+      <line x1="26" y1="26" x2="26" y2="37" stroke="url(#ng)" strokeWidth=".7" strokeOpacity=".5"/>
+      <g transform="translate(26,9)">
+        <polygon points="0,-4 1.2,-1.2 4,0 1.2,1.2 0,4 -1.2,1.2 -4,0 -1.2,-1.2" fill="url(#ng)" opacity=".85"/>
+        <circle r="1.5" fill="url(#ng)"/>
+      </g>
+      {/* النص */}
+      <text x="58" y="30" fontFamily="Tajawal, Arial, sans-serif" fontSize="22" fontWeight="800" fill="url(#ng)">خدماتي</text>
+      <text x="59" y="43" fontFamily="Tajawal, Arial, sans-serif" fontSize="9"  fontWeight="400" fill="#A67420" fillOpacity=".85">سوق الخدمات السعودي</text>
+    </svg>
+  )
+}
+
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [userData, setUserData] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [notifCount, setNotifCount] = useState(0);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifs, setNotifs] = useState([]);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
+
+  // تطبيق الثيم عند التحميل وعند التغيير
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    localStorage.setItem('theme', theme)
+  }, [theme])
+
+  function toggleTheme() {
+    setTheme(t => t === 'dark' ? 'light' : 'dark')
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -83,9 +130,14 @@ export default function Navbar() {
 
   return (
     <nav className="navbar" dir="rtl">
-      <Link to="/" className="nav-logo">🏗️ مقاولي</Link>
+      <Link to="/" className="nav-logo"><Logo /></Link>
 
-      <div className="nav-links">
+      {/* زر الموبايل */}
+      <button className="nav-mobile-toggle" onClick={() => setMobileOpen(o => !o)} aria-label="القائمة">
+        {mobileOpen ? '✕' : '☰'}
+      </button>
+
+      <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
         <Link to="/search" className={`nav-link ${location.pathname === '/search' ? 'active' : ''}`}>
           طلبات
         </Link>
@@ -107,6 +159,10 @@ export default function Navbar() {
       </div>
 
       <div className="nav-actions">
+            {/* زر Dark/Light */}
+            <button className="theme-toggle" onClick={toggleTheme} title="تغيير الوضع">
+              {theme === 'dark' ? '☀️' : '🌙'}
+            </button>
         {user ? (
           <>
             <div className="notif-wrapper">
