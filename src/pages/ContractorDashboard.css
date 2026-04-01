@@ -294,3 +294,27 @@
   .stats-grid { grid-template-columns: repeat(2,1fr); }
   .portfolio-grid { grid-template-columns: 1fr; }
 }
+
+/* ══ LIGHT MODE — تحديد مباشر لكل لون في الداشبورد ══ */
+[data-theme="light"] .dash-title           { color: #2D1A00 !important; }
+[data-theme="light"] .dash-nav-item        { color: #4A2E00 !important; }
+[data-theme="light"] .dash-nav-item.active { color: #6B4400 !important; background: rgba(139,90,0,.1) !important; }
+[data-theme="light"] .dash-nav-item:hover  { color: #6B4400 !important; background: rgba(139,90,0,.08) !important; }
+[data-theme="light"] .dash-logo            { -webkit-text-fill-color: #6B4400 !important; }
+[data-theme="light"] .stat-val             { -webkit-text-fill-color: #6B4400 !important; background: none !important; }
+[data-theme="light"] .stat-lbl             { color: #6B5040 !important; }
+[data-theme="light"] .form-field label     { color: #4A2E00 !important; }
+[data-theme="light"] .form-field input,
+[data-theme="light"] .form-field textarea  { color: #2D1A00 !important; background: #fff !important; border-color: #C8922A !important; }
+[data-theme="light"] .portfolio-info h3    { color: #2D1A00 !important; }
+[data-theme="light"] .portfolio-info p     { color: #6B5040 !important; }
+[data-theme="light"] .quote-req-title      { color: #2D1A00 !important; }
+[data-theme="light"] .city-chip-dark       { color: #4A2E00 !important; border-color: #C8922A !important; }
+[data-theme="light"] .city-chip-dark.active{ color: #6B4400 !important; background: rgba(139,90,0,.1) !important; }
+[data-theme="light"] .action-btn           { color: #6B4400 !important; border-color: #C8922A !important; }
+[data-theme="light"] .empty-state          { color: #6B5040 !important; }
+[data-theme="light"] .profile-saved-banner { color: #16a34a !important; }
+[data-theme="light"] .dash-logout          { color: #dc2626 !important; }
+[data-theme="light"] .quote-status-badge.pending  { color: #92400e !important; background: #fef3c7 !important; border-color: #d97706 !important; }
+[data-theme="light"] .quote-status-badge.accepted { color: #166534 !important; background: #dcfce7 !important; border-color: #16a34a !important; }
+[data-theme="light"] .quote-status-badge.rejected { color: #991b1b !important; background: #fee2e2 !important; border-color: #dc2626 !important; }
