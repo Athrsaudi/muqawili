@@ -403,3 +403,39 @@ input, textarea, select { font-family: inherit; }
 [data-theme="light"] .star-btn.active {
   color: var(--gold-deeper) !important;
 }
+
+/* ══════════════════════════════════════════════════════
+   LIGHT MODE — إصلاح نهائي شامل لكل نصوص الداشبورد
+══════════════════════════════════════════════════════ */
+
+/* كل نص في الداشبورد يكون داكناً في الوضع الفاتح */
+[data-theme="light"] .dash-layout,
+[data-theme="light"] .dash-layout * {
+  --gold:        #8B5A00;
+  --gold-dark:   #6B4400;
+  --gold-deeper: #4A2E00;
+}
+
+/* استثناء: الخلفيات والحدود تبقى دافئة */
+[data-theme="light"] .dash-layout .stat-val {
+  background: linear-gradient(135deg, #6B4400, #8B5A00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .dash-layout .dash-logo {
+  background: linear-gradient(135deg, #6B4400, #8B5A00);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .dash-layout .dash-nav-item {
+  color: #3D2000;
+}
+[data-theme="light"] .dash-layout .dash-nav-item.active,
+[data-theme="light"] .dash-layout .dash-nav-item:hover {
+  color: #6B4400;
+  background: rgba(139,90,0,.08);
+}
