@@ -57,13 +57,29 @@ export default function RequestDetail() {
     setQuoteSent(true); loadData()
   }
 
-  async function acceptQuote(quoteId) {
+  async function acceptQuote(quoteId, contractorUserId) {
     setAccepting(true)
     const { error: e1 } = await supabase.from('price_quotes').update({ status: 'accepted' }).eq('id', quoteId)
     if (e1) { alert('حدث خطأ: ' + e1.message); setAccepting(false); return }
     await supabase.from('price_quotes').update({ status: 'rejected' }).eq('request_id', id).neq('id', quoteId).eq('status', 'pending')
     await supabase.from('service_requests').update({ status: 'in_progress' }).eq('id', id)
+    // إنشاء محادثة تلقائياً
+    await supabase.from('conversations').upsert({
+      request_id: id,
+      client_id: request.client_id,
+      contractor_id: contractorUserId
+    }, { onConflict: 'request_id,client_id,contractor_id' })
     setAccepting(false); loadData()
+  }
+
+  async function openChat(contractorUserId) {
+    const { data } = await supabase.from('conversations')
+      .select('id')
+      .eq('request_id', id)
+      .eq('client_id', request.client_id)
+      .eq('contractor_id', contractorUserId)
+      .single()
+    if (data) navigate('/chat/' + data.id)
   }
 
   if (loading) return <div className="detail-loading">جارٍ...</div>
@@ -121,9 +137,19 @@ export default function RequestDetail() {
               <div className="quote-days">⏱ {q.duration_days} يوم</div>
               {q.notes && <div className="quote-note">{q.notes}</div>}
               {isClient && request.status === 'open' && q.status === 'pending' && (
-                <button className="accept-btn" onClick={() => acceptQuote(q.id)} disabled={accepting}>{accepting ? 'جارٍ...' : '✔ قبول هذا العرض'}</button>
+                <button className="accept-btn" onClick={() => acceptQuote(q.id, q.contractor_profiles?.user_id)} disabled={accepting}>{accepting ? 'جارٍ...' : '✔ قبول هذا العرض'}</button>
               )}
-              {q.status === 'accepted' && <div className="accepted-badge">✅ تم قبول هذا العرض</div>}
+              {q.status === 'accepted' && (
+                <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <div className="accepted-badge">✅ تم قبول هذا العرض</div>
+                  {isClient && (
+                    <button className="accept-btn" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}
+                      onClick={() => openChat(q.contractor_profiles?.user_id)}>
+                      💬 مراسلة المقاول
+                    </button>
+                  )}
+                </div>
+              )}
               {q.status === 'rejected' && <div className="rejected-badge">❌ مرفوض</div>}
             </div>
           ))}

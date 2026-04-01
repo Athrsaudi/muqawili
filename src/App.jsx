@@ -12,6 +12,7 @@ import ContractorDashboard from './pages/ContractorDashboard'
 import ContractorProfile from './pages/ContractorProfile'
 import AdminPanel from './pages/Admin'
 import MyRequests from './pages/MyRequests'
+import Chat from './pages/Chat'
 
 export default function App() {
   return (
@@ -49,6 +50,13 @@ export default function App() {
         <Route path="/dashboard/contractor" element={
           <ProtectedRoute allowedTypes={['contractor']}>
             <ContractorDashboard />
+          </ProtectedRoute>
+        } />
+
+        {/* المحادثات */}
+        <Route path="/chat/:conversationId" element={
+          <ProtectedRoute>
+            <Chat />
           </ProtectedRoute>
         } />
 
