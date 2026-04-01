@@ -67,19 +67,19 @@ export default function AdminDashboard() {
   }
 
   const STATUS_MAP = { open: 'مفتوح', in_progress: 'جاري', closed: 'مغلق', cancelled: 'ملغي' }
-  const BADGE_MAP = { none: '-', trusted: 'موثوق', verified: 'موثق ✅' }
+  const BADGE_MAP = { none: '-', trusted: 'موثوق', verified: 'موثق' }
 
   if (loading) return <div className="dash-loading"><div className="dash-spinner" /><p>جاريي...</p></div>
 
   return (
     <div className="contractor-dash" dir="rtl">
       <aside className="dash-sidebar">
-        <div className="dash-brand">⚙️ لوحة الإدارة</div>
+        <div className="dash-brand">لوحة الإدارة</div>
         <nav className="dash-nav">
           {[
-            { id: 'overview', icon: '📊', label: 'إحصائيات' },
+            { id: 'overview', icon: 'overview', label: 'إحصائيات' },
             { id: 'users', icon: '👥', label: 'المستخدمون' },
-            { id: 'contractors', icon: '🔧', label: 'المقاولون' },
+            { id: 'contractors', icon: 'tool', label: 'المقاولون' },
             { id: 'requests', icon: '📋', label: 'الطلبات' },
           ].map(item => (
             <button key={item.id} className={'dash-nav-item ' + (activeTab === item.id ? 'active' : '')} onClick={() => setActiveTab(item.id)}>
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
             </button>
           ))}
         </nav>
-        <button className="dash-logout" onClick={handleLogout}>🚪 خروج</button>
+        <button className="dash-logout" onClick={handleLogout}>خروج</button>
       </aside>
 
       <main className="dash-main">
@@ -97,11 +97,11 @@ export default function AdminDashboard() {
             <div className="stats-grid">
               {[
                 { icon: '👥', value: stats.users, label: 'إجمالي المستخدمين' },
-                { icon: '🔧', value: stats.contractors, label: 'مقاولون' },
-                { icon: '🏠', value: stats.clients, label: 'أصحاب عمل' },
+                { icon: 'tool', value: stats.contractors, label: 'مقاولون' },
+                { icon: 'users', value: stats.clients, label: 'أصحاب عمل' },
                 { icon: '📋', value: stats.requests, label: 'طلبات' },
-                { icon: '💰', value: stats.quotes, label: 'عروض أسعار' },
-                { icon: '⭐', value: stats.reviews, label: 'تقييمات' },
+                { icon: 'money', value: stats.quotes, label: 'عروض أسعار' },
+                { icon: 'star', value: stats.reviews, label: 'تقييمات' },
               ].map((s, i) => (
                 <div key={i} className="stat-card">
                   <div className="stat-icon">{s.icon}</div>
@@ -147,7 +147,7 @@ export default function AdminDashboard() {
                     <tr key={c.id}>
                       <td>{c.users?.full_name}</td>
                       <td>{c.users?.city}</td>
-                      <td>⭐ {c.avg_rating > 0 ? c.avg_rating.toFixed(1) : '-'} ({c.total_reviews})</td>
+                      <td>{c.avg_rating > 0 ? c.avg_rating.toFixed(1) : '-'} ({c.total_reviews})</td>
                       <td><span className={'badge-' + c.badge_type}>{BADGE_MAP[c.badge_type] || '-'}</span></td>
                       <td><span className={c.is_available ? 'status-active' : 'status-inactive'}>{c.is_available ? 'نعم' : 'لا'}</span></td>
                       <td>{c.badge_type !== 'verified' && <button className="verify-btn" onClick={() => verifyContractor(c.user_id)}>توثيق</button>}</td>

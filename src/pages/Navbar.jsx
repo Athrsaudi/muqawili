@@ -141,8 +141,8 @@ export default function Navbar() {
                     <div className="nav-dropdown-name">{profile?.full_name}</div>
                     <div className="nav-dropdown-role">
                       {profile?.user_type === 'contractor' ? 'مقاول'
-                      : profile?.user_type === 'admin'      ? '⚙️ مدير'
-                      :                                       '🏠 صاحب عمل'}
+                      : profile?.user_type === 'admin'      ? 'مدير'
+                      :                                       'صاحب عمل'}
                     </div>
                   </div>
                   <div className="nav-dropdown-divider" />
