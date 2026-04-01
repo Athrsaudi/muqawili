@@ -9,7 +9,7 @@
   border-radius: var(--r-md); font-size: 14px; font-family: 'Tajawal', sans-serif;
   cursor: pointer; transition: all .2s;
 }
-.back-btn:hover { border-color: var(--gold); color: var(--gold); }
+.back-btn:hover { border-color: var(--gold-dark); color: var(--gold-dark); }
 
 /* Steps */
 .steps-bar { display: flex; align-items: center; gap: 0; margin-bottom: 32px; }
@@ -27,10 +27,10 @@
   color: var(--text-muted); display: flex; align-items: center; justify-content: center;
   font-size: 13px; font-weight: 700; z-index: 1; transition: all .2s;
 }
-.step.active .step-num { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.step.active .step-num { border-color: var(--gold-dark); color: var(--gold-dark); background: var(--gold-bg); }
 .step.done .step-num { border-color: var(--success); color: var(--success); background: var(--success-bg); }
 .step-label { font-size: 12px; color: var(--text-muted); }
-.step.active .step-label { color: var(--gold); }
+.step.active .step-label { color: var(--gold-dark); }
 
 /* محتوى الخطوة */
 .step-content {
@@ -45,7 +45,7 @@
   color: var(--text-primary); font-size: 14px;
   font-family: 'Tajawal', sans-serif; outline: none; transition: border-color .2s;
 }
-.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--gold); }
+.field input:focus, .field textarea:focus, .field select:focus { border-color: var(--gold-dark); }
 .field input::placeholder, .field textarea::placeholder { color: var(--text-muted); }
 .field textarea { resize: vertical; }
 .field select option { background: var(--bg-card2); }
@@ -59,8 +59,8 @@
   cursor: pointer; transition: all .2s; color: var(--text-secondary);
   font-family: 'Tajawal', sans-serif;
 }
-.cat-card:hover { border-color: var(--gold); background: var(--gold-bg); color: var(--gold); }
-.cat-card.active { border-color: var(--gold); background: var(--gold-bg); color: var(--gold); }
+.cat-card:hover { border-color: var(--gold-dark); background: var(--gold-bg); color: var(--gold-dark); }
+.cat-card.active { border-color: var(--gold-dark); background: var(--gold-bg); color: var(--gold-dark); }
 .cat-icon { font-size: 24px; }
 .cat-label { font-size: 13px; font-weight: 600; }
 

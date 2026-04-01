@@ -18,8 +18,8 @@
   color: var(--text-secondary); font-size: 13px; font-weight: 600;
   font-family: 'Tajawal', sans-serif; cursor: pointer; transition: all .2s;
 }
-.mreq-filter-btn:hover { border-color: var(--gold); color: var(--gold); }
-.mreq-filter-btn.active { background: var(--gold-bg); border-color: var(--gold); color: var(--gold); }
+.mreq-filter-btn:hover { border-color: var(--gold-dark); color: var(--gold-dark); }
+.mreq-filter-btn.active { background: var(--gold-bg); border-color: var(--gold-dark); color: var(--gold-dark); }
 
 .mreq-list { display: flex; flex-direction: column; gap: 14px; }
 
@@ -27,14 +27,14 @@
   background: var(--bg-card); border: 1.5px solid var(--border);
   border-radius: var(--r-lg); padding: 22px; transition: all .2s;
 }
-.mreq-card:hover { border-color: var(--gold); transform: translateY(-1px); box-shadow: var(--shadow-md); }
+.mreq-card:hover { border-color: var(--gold-dark); transform: translateY(-1px); box-shadow: var(--shadow-md); }
 
 .mreq-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .mreq-card-meta { display: flex; align-items: center; gap: 8px; }
 
 .mreq-category {
   padding: 4px 12px; border-radius: var(--r-full);
-  background: var(--gold-bg); color: var(--gold);
+  background: var(--gold-bg); color: var(--gold-dark);
   border: 1px solid var(--gold-border); font-size: 12px; font-weight: 700;
 }
 .mreq-status { padding: 4px 12px; border-radius: var(--r-full); font-size: 12px; font-weight: 700; }
@@ -71,7 +71,7 @@
 .mreq-view-btn {
   padding: 8px 18px; border-radius: var(--r-md);
   background: var(--gold-bg); border: 1px solid var(--gold-border);
-  color: var(--gold); text-decoration: none; font-size: 13px; font-weight: 700; transition: all .2s;
+  color: var(--gold-dark); text-decoration: none; font-size: 13px; font-weight: 700; transition: all .2s;
 }
 .mreq-view-btn:hover { background: var(--gold); color: #fff; }
 
@@ -82,7 +82,7 @@
   background: var(--bg-card); border: 1.5px solid var(--border);
   color: var(--text-primary); cursor: pointer; font-family: inherit; font-size: 14px; transition: all .2s;
 }
-.mreq-page-btn:hover:not(:disabled) { border-color: var(--gold); color: var(--gold); }
+.mreq-page-btn:hover:not(:disabled) { border-color: var(--gold-dark); color: var(--gold-dark); }
 .mreq-page-btn:disabled { opacity: .4; cursor: not-allowed; }
 .mreq-page-info { font-size: 14px; color: var(--text-secondary); }
 

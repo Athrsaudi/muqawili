@@ -53,10 +53,10 @@
   cursor: pointer; transition: all 0.2s; text-align: right;
   width: 100%; position: relative;
 }
-.dash-nav-item:hover { background: var(--gold-bg); color: var(--gold); }
+.dash-nav-item:hover { background: var(--gold-bg); color: var(--gold-dark); }
 .dash-nav-item.active {
-  background: var(--gold-bg); color: var(--gold);
-  border: 1px solid var(--gold-border);
+  background: var(--gold-bg); color: var(--gold-dark);
+  border: 1px solid var(--gold-border); font-weight: 700;
 }
 .dash-nav-item.active::before {
   content: ''; position: absolute; right: 0; top: 50%;
@@ -124,7 +124,7 @@
 .action-btn {
   padding: 12px 24px; border-radius: 12px;
   border: 1.5px solid var(--gold-border);
-  background: var(--gold-bg); color: var(--gold);
+  background: var(--gold-bg); color: var(--gold-dark);
   font-size: 14px; font-weight: 600;
   font-family: 'Tajawal', sans-serif; cursor: pointer; transition: all 0.2s;
 }
@@ -157,7 +157,7 @@
   font-family: 'Tajawal', sans-serif; outline: none; transition: all 0.2s;
 }
 .form-field input:focus, .form-field textarea:focus {
-  border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-border);
+  border-color: var(--gold-dark); box-shadow: 0 0 0 3px var(--gold-border);
 }
 .form-field input.disabled { opacity: 0.5; cursor: not-allowed; }
 .form-field textarea { resize: vertical; min-height: 110px; }
@@ -202,8 +202,8 @@
   color: var(--text-secondary); font-size: 13px; font-weight: 600;
   font-family: 'Tajawal', sans-serif; cursor: pointer; transition: all 0.15s;
 }
-.city-chip-dark:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
-.city-chip-dark.active { background: var(--gold-bg); border-color: var(--gold-dark); color: var(--gold); }
+.city-chip-dark:hover { border-color: var(--gold-dark); color: var(--gold-dark); background: var(--gold-bg); }
+.city-chip-dark.active { background: var(--gold-bg); border-color: var(--gold-dark); color: var(--gold-dark); }
 
 /* ── Portfolio ── */
 .portfolio-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; }
@@ -212,7 +212,7 @@
   background: var(--bg-card); border: 1.5px solid var(--border);
   border-radius: 16px; overflow: hidden; transition: all 0.2s; position: relative;
 }
-.portfolio-card:hover { border-color: var(--gold); transform: translateY(-4px); box-shadow: var(--shadow-md); }
+.portfolio-card:hover { border-color: var(--gold-dark); transform: translateY(-4px); box-shadow: var(--shadow-md); }
 .portfolio-img { width: 100%; aspect-ratio: 4/3; object-fit: cover; }
 
 .portfolio-file-count {
@@ -251,7 +251,7 @@
   font-family: 'Tajawal', sans-serif; outline: none; transition: all 0.2s;
 }
 .field input:focus, .field textarea:focus {
-  border-color: var(--gold); box-shadow: 0 0 0 3px var(--gold-border);
+  border-color: var(--gold-dark); box-shadow: 0 0 0 3px var(--gold-border);
 }
 .field textarea { resize: vertical; min-height: 80px; }
 
@@ -263,7 +263,7 @@
   border-radius: 16px; padding: 20px;
   cursor: pointer; transition: all 0.2s;
 }
-.quote-card:hover { border-color: var(--gold); transform: translateX(-4px); box-shadow: var(--shadow-sm); }
+.quote-card:hover { border-color: var(--gold-dark); transform: translateX(-4px); box-shadow: var(--shadow-sm); }
 
 .quote-req-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 10px; }
 .quote-meta { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }

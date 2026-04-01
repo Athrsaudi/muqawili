@@ -37,8 +37,8 @@
   color: var(--text-secondary); text-decoration: none;
   transition: all .15s;
 }
-.nav-link:hover { color: var(--gold); background: var(--gold-bg); }
-.nav-link.active { color: var(--gold); background: var(--gold-bg); font-weight: 700; }
+.nav-link:hover { color: var(--gold-dark); background: var(--gold-bg); }
+.nav-link.active { color: var(--gold-dark); background: var(--gold-bg); font-weight: 700; }
 
 /* ── أكشنز ── */
 .nav-actions { display: flex; align-items: center; gap: 10px; }
@@ -52,7 +52,7 @@
   position: relative; display: flex; align-items: center; justify-content: center;
   transition: all .15s;
 }
-.notif-btn:hover { border-color: var(--gold); color: var(--gold); background: var(--gold-bg); }
+.notif-btn:hover { border-color: var(--gold-dark); color: var(--gold-dark); background: var(--gold-bg); }
 
 .notif-badge {
   position: absolute; top: -4px; right: -4px;
@@ -77,7 +77,7 @@
   padding: 14px 16px; border-bottom: 1px solid var(--border);
 }
 .notif-header span { font-size: 14px; font-weight: 700; color: var(--text-primary); }
-.mark-read-btn { font-size: 12px; color: var(--gold); background: none; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; }
+.mark-read-btn { font-size: 12px; color: var(--gold-dark); background: none; border: none; cursor: pointer; font-family: 'Tajawal', sans-serif; }
 .no-notifs { padding: 24px; text-align: center; color: var(--text-muted); font-size: 13px; }
 
 .notif-item {
@@ -127,12 +127,12 @@
   width: 100%; text-align: right; cursor: pointer;
   transition: background .15s; font-family: inherit; direction: rtl;
 }
-.nav-menu-item:hover { background: var(--gold-bg); color: var(--gold); }
+.nav-menu-item:hover { background: var(--gold-bg); color: var(--gold-dark); }
 .nav-menu-logout { color: var(--danger); }
 .nav-menu-logout:hover { background: var(--danger-bg); color: var(--danger); }
 
 /* ── زر الدخول ── */
-.nav-login-btn {
+.nav-login-btn { 
   padding: 9px 20px;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold-deeper));
   color: #fff; border-radius: var(--r-md);
