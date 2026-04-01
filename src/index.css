@@ -302,3 +302,63 @@ input, textarea, select { font-family: inherit; }
 .file-lightbox { position: fixed; inset: 0; background: rgba(0,0,0,.92); z-index: 9999; display: flex; align-items: center; justify-content: center; cursor: zoom-out; }
 .file-lightbox-img { max-width: 90vw; max-height: 90vh; border-radius: 8px; object-fit: contain; }
 .file-lightbox-close { position: absolute; top: 20px; left: 20px; background: rgba(255,255,255,.15); border: none; color: #fff; font-size: 20px; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; }
+
+/* ══════════════════════════════════════
+   إصلاحات الوضع الفاتح — تحسين التباين
+══════════════════════════════════════ */
+[data-theme="light"] {
+  /* التأكد أن النصوص داخل العناصر الملوّنة واضحة */
+  --btn-text: #fff;
+}
+
+/* أزرار gradient → نص أبيض دائماً */
+[data-theme="light"] .btn-primary,
+[data-theme="light"] .auth-btn,
+[data-theme="light"] .next-btn,
+[data-theme="light"] .submit-btn,
+[data-theme="light"] .mreq-new-btn,
+[data-theme="light"] .new-req-btn,
+[data-theme="light"] .submit-quote-btn,
+[data-theme="light"] .accept-btn,
+[data-theme="light"] .chat-send-btn,
+[data-theme="light"] .cta-btn,
+[data-theme="light"] .hero-btn-primary,
+[data-theme="light"] .nav-login-btn {
+  color: #fff !important;
+}
+
+/* stat-num في الوضع الفاتح */
+[data-theme="light"] .stat-num {
+  background: linear-gradient(135deg, #A67420, #C8922A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* عناوين أقوى تباين */
+[data-theme="light"] .dash-title,
+[data-theme="light"] .stat-val,
+[data-theme="light"] .mreq-title,
+[data-theme="light"] .search-title,
+[data-theme="light"] .detail-title,
+[data-theme="light"] .section-title {
+  color: var(--text-primary);
+}
+
+/* hero title في الوضع الفاتح */
+[data-theme="light"] .hero-title {
+  color: #2D1A00;
+}
+
+/* بطاقات في الوضع الفاتح */
+[data-theme="light"] .card,
+[data-theme="light"] .detail-card,
+[data-theme="light"] .quote-form-card,
+[data-theme="light"] .quotes-section,
+[data-theme="light"] .step-content,
+[data-theme="light"] .mreq-card,
+[data-theme="light"] .result-card,
+[data-theme="light"] .recent-card,
+[data-theme="light"] .cat-item {
+  box-shadow: 0 2px 12px rgba(0,0,0,.08);
+}
