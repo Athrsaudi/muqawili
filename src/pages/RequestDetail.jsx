@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import FileViewer from '../components/FileViewer'
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -103,9 +104,9 @@ export default function RequestDetail() {
           <p className="detail-desc">{request.description}</p>
           <FileViewer files={allFiles} title="الصور والملفات المرفقة" />
           <div className="detail-meta">
-            <span>📍 {request.city}{request.district ? ' - ' + request.district : ''}</span>
-            <span>👤 {request.users?.full_name}</span>
-            {request.budget_min && <span>💰 {Number(request.budget_min).toLocaleString('ar')} - {Number(request.budget_max).toLocaleString('ar')} ريال</span>}
+            <span><Icon name="location" size={13} /> {request.city}{request.district ? ' - ' + request.district : ''}</span>
+            <span><Icon name="user" size={13} /> {request.users?.full_name}</span>
+            {request.budget_min && <span><Icon name="money" size={13} />  {Number(request.budget_min).toLocaleString('ar')} - {Number(request.budget_max).toLocaleString('ar')} ريال</span>}
           </div>
         </div>
 
@@ -117,11 +118,11 @@ export default function RequestDetail() {
               <div className="field"><label>مدة التنفيذ (يوم) *</label><input type="number" placeholder="30" value={quoteForm.duration_days} onChange={e => setQuoteForm(p => ({ ...p, duration_days: e.target.value }))} /></div>
             </div>
             <div className="field"><label>ملاحظات</label><textarea rows={3} placeholder="تفاصيل إضافية..." value={quoteForm.notes} onChange={e => setQuoteForm(p => ({ ...p, notes: e.target.value }))} /></div>
-            {quoteError && <div className="req-error">⚠️ {quoteError}</div>}
+            {quoteError && <div className="req-error">{quoteError}</div>}
             <button className="submit-quote-btn" onClick={sendQuote} disabled={quoteLoading}>{quoteLoading ? 'جارٍ...' : 'إرسال العرض'}</button>
           </div>
         )}
-        {(alreadySent || quoteSent) && profile && <div className="quote-sent">✅ تم إرسال عرضك بنجاح</div>}
+        {(alreadySent || quoteSent) && profile && <div className="quote-sent">تم إرسال عرضك بنجاح</div>}
 
         <div className="quotes-section">
           <h2>العروض ({quotes.length})</h2>
@@ -130,9 +131,9 @@ export default function RequestDetail() {
               <div className="quote-top">
                 <div>
                   <div className="quote-contractor">{q.contractor_profiles?.users?.full_name}</div>
-                  <div className="quote-location">📍 {q.contractor_profiles?.users?.city}</div>
+                  <div className="quote-location"><Icon name="location" size={12} /> {q.contractor_profiles?.users?.city}</div>
                 </div>
-                <div className="quote-price-badge">💰 {Number(q.price).toLocaleString('ar')} ريال</div>
+                <div className="quote-price-badge"><Icon name="money" size={14} /> {Number(q.price).toLocaleString('ar')} ريال</div>
               </div>
               <div className="quote-days">⏱ {q.duration_days} يوم</div>
               {q.notes && <div className="quote-note">{q.notes}</div>}
@@ -141,16 +142,16 @@ export default function RequestDetail() {
               )}
               {q.status === 'accepted' && (
                 <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-                  <div className="accepted-badge">✅ تم قبول هذا العرض</div>
+                  <div className="accepted-badge"><Icon name="checkCircle" size={15} /> تم قبول هذا العرض</div>
                   {isClient && (
                     <button className="accept-btn" style={{ background: 'var(--gold-bg)', color: 'var(--gold)', border: '1px solid var(--gold-border)' }}
                       onClick={() => openChat(q.contractor_profiles?.user_id)}>
-                      💬 مراسلة المقاول
+                      <Icon name="chat" size={15} /> مراسلة المقاول
                     </button>
                   )}
                 </div>
               )}
-              {q.status === 'rejected' && <div className="rejected-badge">❌ مرفوض</div>}
+              {q.status === 'rejected' && <div className="rejected-badge">مرفوض ✗</div>}
             </div>
           ))}
         </div>

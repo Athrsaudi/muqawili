@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -106,9 +107,9 @@ export default function ContractorProfile() {
           <div className="cp-info">
             <h1 className="cp-name">{user.full_name}</h1>
             <div className="cp-meta">
-              <span>📍 {user.city}</span>
-              <span>🛠️ {contractor.years_experience} سنوات خبرة</span>
-              {contractor.is_available ? <span className="available">✅ متاح</span> : <span className="unavailable">❌ غير متاح</span>}
+              <span><Icon name="location" size={14} /> {user.city}</span>
+              <span>🛠️ <Icon name="clock" size={14} /> {contractor.years_experience} سنوات خبرة</span>
+              {contractor.is_available ? <span className="available"><Icon name="checkCircle" size={14} /> متاح</span> : <span className="unavailable"><Icon name="xCircle" size={14} /> غير متاح</span>}
             </div>
             <div className="cp-rating">
               <Stars rating={Math.round(contractor.avg_rating || 0)} size={20} />
@@ -176,7 +177,7 @@ export default function ContractorProfile() {
                 onChange={e => setReviewForm(p => ({...p, comment: e.target.value}))}
                 rows={4}
               />
-              {reviewError && <div className="review-error">⚠️ {reviewError}</div>}
+              {reviewError && <div className="review-error">{reviewError}</div>}
               <button className="submit-review-btn" onClick={submitReview} disabled={reviewLoading}>
                 {reviewLoading ? 'جاريي...' : 'إرسال التقييم'}
               </button>
@@ -184,7 +185,7 @@ export default function ContractorProfile() {
           )}
 
           {alreadyReviewed && currentUser && (
-            <div className="already-reviewed">✅ لقد قدمت تقييمك بالفعل</div>
+            <div className="already-reviewed">لقد قدمت تقييمك بالفعل</div>
           )}
 
           <div className="reviews-list">
@@ -195,7 +196,7 @@ export default function ContractorProfile() {
                 <div className="review-top">
                   <div>
                     <div className="reviewer-name">{r.users?.full_name}</div>
-                    <div className="reviewer-city">📍 {r.users?.city}</div>
+                    <div className="reviewer-city"><Icon name="location" size={12} /> {r.users?.city}</div>
                   </div>
                   <div className="review-right">
                     <Stars rating={r.rating} size={14} />

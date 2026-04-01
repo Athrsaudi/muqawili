@@ -17,7 +17,7 @@ export default class ErrorBoundary extends Component {
         fontFamily: 'Tajawal, sans-serif',
         color: 'var(--text-secondary)'
       }}>
-        <span style={{ fontSize: 48 }}>⚠️</span>
+        <span style={{ fontSize: 48 }}>⚠</span>
         <h2 style={{ color: 'var(--text-primary)', fontSize: 20 }}>حدث خطأ غير متوقع</h2>
         <p style={{ fontSize: 14, maxWidth: 400 }}>
           نأسف على ذلك. حاول تحديث الصفحة أو العودة للرئيسية.

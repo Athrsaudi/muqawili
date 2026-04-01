@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import FileUploader from '../components/FileUploader'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -96,7 +97,7 @@ export default function NewRequest() {
               maxFiles={10}
               onFilesChange={urls => setUploadedFiles(urls)}
             />
-            {error && <div className="req-error">⚠️ {error}</div>}
+            {error && <div className="req-error">{error}</div>}
             <button className="next-btn" onClick={() => {
               if (!form.title.trim() || !form.description.trim() || !form.city) { setError('يرجى تعبئة جميع الحقول الإلزامية'); return }
               setError(''); setStep(2)
@@ -138,7 +139,7 @@ export default function NewRequest() {
               <div className="summary-row"><span>التصنيف:</span><span>{CATEGORIES.find(c => c.value === form.category)?.label}</span></div>
               <div className="summary-row"><span>المدينة:</span><span>{form.city}</span></div>
             </div>
-            {error && <div className="req-error">⚠️ {error}</div>}
+            {error && <div className="req-error">{error}</div>}
             <div className="step-btns">
               <button className="back-step-btn" onClick={() => setStep(2)}>← رجوع</button>
               <button className="submit-btn" onClick={handleSubmit} disabled={loading}>{loading ? 'جارٍ...' : 'إرسال الطلب ✓'}</button>

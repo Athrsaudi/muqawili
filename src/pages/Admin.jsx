@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -105,17 +106,17 @@ export default function AdminPanel() {
  const clients = users.filter(u => u.user_type === 'client')
 
  const TABS = [
- { id: 'overview', icon: '📊', label: 'نظرة عامة' },
- { id: 'contractors', icon: '🏗️', label: 'المقاولون' },
- { id: 'clients', icon: '👤', label: 'العملاء' },
- { id: 'requests', icon: '📋', label: 'الطلبات' },
+ { id: 'overview', icon: 'overview', label: 'نظرة عامة' },
+ { id: 'contractors', icon: 'contractors', label: 'المقاولون' },
+ { id: 'clients', icon: 'clients', label: 'العملاء' },
+ { id: 'requests', icon: 'requests', label: 'الطلبات' },
  ]
 
  return (
  <div className="admin-page" dir="rtl">
  <aside className="admin-sidebar">
  <div className="admin-sidebar-header">
- <span className="admin-sidebar-icon">⚙️</span>
+ <span className="admin-sidebar-icon">⚙</span>
  <span className="admin-sidebar-title">لوحة الإدارة</span>
  </div>
  <nav className="admin-sidebar-nav">
@@ -131,7 +132,7 @@ export default function AdminPanel() {
  ))}
  </nav>
  <button className="admin-sidebar-logout" onClick={handleLogout}>
- 🚪 تسجيل الخروج
+ تسجيل الخروج
  </button>
  </aside>
  <main className="admin-main">
@@ -141,12 +142,12 @@ export default function AdminPanel() {
  <div className="admin-stats-grid">
  {[
  { icon: '👥', val: stats.users, label: 'إجمالي المستخدمين', color: '#3b82f6' },
- { icon: '🏗️', val: stats.contractors, label: 'مقاول', color: '#f59e0b' },
- { icon: '👤', val: stats.clients, label: 'عميل', color: '#10b981' },
- { icon: '📋', val: stats.requests, label: 'طلب', color: '#8b5cf6' },
+ { icon: 'tool', val: stats.contractors, label: 'مقاول', color: '#f59e0b' },
+ { icon: 'user', val: stats.clients, label: 'عميل', color: '#10b981' },
+ { icon: 'clipboard', val: stats.requests, label: 'طلب', color: '#8b5cf6' },
  { icon: '📂', val: stats.openRequests, label: 'طلب مفتوح', color: '#06b6d4' },
- { icon: '💬', val: stats.quotes, label: 'عرض سعر', color: '#ec4899' },
- { icon: '⭐', val: stats.reviews, label: 'تقييم', color: '#f97316' },
+ { icon: 'chat', val: stats.quotes, label: 'عرض سعر', color: '#ec4899' },
+ { icon: 'star', val: stats.reviews, label: 'تقييم', color: '#f97316' },
  ].map((s, i) => (
  <div className="admin-stat-box" key={i} style={{ '--accent': s.color }}>
  <div className="admin-stat-icon">{s.icon}</div>
@@ -186,7 +187,7 @@ export default function AdminPanel() {
  <td className="admin-td-name">{u.full_name}</td>
  <td className="admin-td-phone">{u.phone}</td>
  <td>{u.city}</td>
- <td>{u.contractor_profiles?.avg_rating > 0 ? <span className="admin-rating">⭐ {Number(u.contractor_profiles.avg_rating).toFixed(1)}</span> : <span className="admin-no-rating">—</span>}</td>
+ <td>{u.contractor_profiles?.avg_rating > 0 ? <span className="admin-rating"><Icon name="star" size={13} color="var(--gold)" /> {Number(u.contractor_profiles.avg_rating).toFixed(1)}</span> : <span className="admin-no-rating">—</span>}</td>
  <td><select className="admin-badge-select" value={u.contractor_profiles?.badge_type || 'none'} disabled={actionLoading === u.contractor_profiles?.id + '-badge'} onChange={e => changeBadge(u.contractor_profiles?.id, e.target.value)}><option value="none">بدون</option><option value="trusted">موثوق</option><option value="verified">موثق</option></select></td>
  <td><button className={'admin-verify-btn ' + (u.is_verified ? 'verified' : '')} onClick={() => toggleVerified(u.id, u.is_verified)} disabled={actionLoading === u.id + '-verify'}>{u.is_verified ? '✓ موثق' : 'توثيق'}</button></td>
  <td><span className={'admin-status-dot ' + (u.is_active ? 'active' : 'inactive')}>{u.is_active ? 'نشط' : 'موقوف'}</span></td>

@@ -55,7 +55,7 @@ export default function FileUploader({bucket,folder,existingFiles=[],onFilesChan
         <span className="file-uploader-label">{label}</span>
         <span className="file-uploader-count">{files.length}/{maxFiles}</span>
       </div>
-      {error&&<div className="file-uploader-error">⚠️ {error}</div>}
+      {error&&<div className="file-uploader-error">{error}</div>}
       <div
         className="file-drop-zone"
         onClick={()=>!uploading&&ref.current&&ref.current.click()}

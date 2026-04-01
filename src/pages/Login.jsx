@@ -232,8 +232,8 @@ export default function Login() {
               <div className='field'>
                 <label>نوع الحساب</label>
                 <div className='type-group'>
-                  <button type='button' className={'type-btn ' + (utype === 'client' ? 'active' : '')} onClick={() => setUtype('client')}>🏠 صاحب عمل</button>
-                  <button type='button' className={'type-btn ' + (utype === 'contractor' ? 'active' : '')} onClick={() => setUtype('contractor')}>🔧 مقاول</button>
+                  <button type='button' className={'type-btn ' + (utype === 'client' ? 'active' : '')} onClick={() => setUtype('client')}>صاحب عمل</button>
+                  <button type='button' className={'type-btn ' + (utype === 'contractor' ? 'active' : '')} onClick={() => setUtype('contractor')}>مقاول</button>
                 </div>
               </div>
               {utype === 'contractor' && (

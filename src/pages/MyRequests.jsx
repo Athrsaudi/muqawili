@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -102,15 +103,15 @@ export default function MyRequests() {
                     <h2 className='mreq-card-title'>{req.title}</h2>
                     <p className='mreq-card-desc'>{req.description?.slice(0, 100)}{req.description?.length > 100 ? '...' : ''}</p>
                     <div className='mreq-card-info'>
-                      <span>📍 {req.city}{req.district ? ' - ' + req.district : ''}</span>
+                      <span><Icon name="location" size={13} /> {req.city}{req.district ? ' - ' + req.district : ''}</span>
                       {req.budget_min && (
-                        <span>💰 {Number(req.budget_min).toLocaleString('ar')} - {Number(req.budget_max).toLocaleString('ar')} ريال</span>
+                        <span><Icon name="money" size={13} /> {Number(req.budget_min).toLocaleString('ar')} - {Number(req.budget_max).toLocaleString('ar')} ريال</span>
                       )}
                     </div>
                     <div className='mreq-card-footer'>
                       <div>
                         {qCount > 0
-                          ? <span className='mreq-quotes-badge'>{accepted ? '✅ تم قبول عرض' : '💬 ' + qCount + ' عرض'}</span>
+                          ? <span className='mreq-quotes-badge'>{accepted ? 'تم قبول عرض' : qCount + ' عرض'}</span>
                           : <span className='mreq-no-quotes'>لا توجد عروض بعد</span>}
                       </div>
                       <div className='mreq-card-actions'>

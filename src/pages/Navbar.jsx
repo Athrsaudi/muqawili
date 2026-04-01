@@ -72,7 +72,7 @@ export default function Navbar() {
     nav('/')
   }
 
-  const icons = { new_quote: '💰', quote_accepted: '✅', new_review: '⭐', new_request: '📍' }
+  const icons = { new_quote: 'money', quote_accepted: 'check', new_review: 'star', new_request: 'location' }
 
   const dashLink = profile?.user_type === 'contractor'
     ? '/dashboard/contractor'
@@ -82,7 +82,7 @@ export default function Navbar() {
 
   return (
     <nav className="navbar" dir="rtl">
-      <Link to="/" className="nav-logo">🏗️ مقاولي</Link>
+      <Link to="/" className="nav-logo">خدماتي</Link>
 
       <div className="nav-links">
         <Link to="/search"         className={'nav-link ' + (loc.pathname === '/search'           ? 'active' : '')}>طلبات</Link>
@@ -140,7 +140,7 @@ export default function Navbar() {
                   <div className="nav-dropdown-header">
                     <div className="nav-dropdown-name">{profile?.full_name}</div>
                     <div className="nav-dropdown-role">
-                      {profile?.user_type === 'contractor' ? '🔧 مقاول'
+                      {profile?.user_type === 'contractor' ? 'مقاول'
                       : profile?.user_type === 'admin'      ? '⚙️ مدير'
                       :                                       '🏠 صاحب عمل'}
                     </div>
@@ -150,14 +150,14 @@ export default function Navbar() {
                   {/* ملفي الشخصي */}
                   {dashLink && (
                     <Link to={dashLink} className="nav-dropdown-item" onClick={() => setMenuOpen(false)}>
-                      <span>📊</span> لوحة التحكم
+                      لوحة التحكم
                     </Link>
                   )}
 
                   {/* ملفي (للمقاول يفتح تبويب ملفي في الداشبورد) */}
                   {profile?.user_type === 'contractor' && (
                     <Link to="/dashboard/contractor?tab=profile" className="nav-dropdown-item" onClick={() => setMenuOpen(false)}>
-                      <span>👤</span> ملفي الشخصي
+                      ملفي الشخصي
                     </Link>
                   )}
 
@@ -172,7 +172,7 @@ export default function Navbar() {
 
                   {/* تسجيل خروج */}
                   <button className="nav-dropdown-item nav-dropdown-logout" onClick={logout}>
-                    <span>🚪</span> تسجيل الخروج
+                    تسجيل الخروج
                   </button>
                 </div>
               )}

@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
@@ -114,7 +115,7 @@ export default function Search() {
           </div>
         ) : requests.length === 0 ? (
           <div className="no-results">
-            <div className="no-results-icon">🔍</div>
+            <div className="no-results-icon"><Icon name="search" size={48} color="var(--text-muted)" /></div>
             <p>لا توجد طلبات تطابق البحث</p>
           </div>
         ) : (
@@ -123,13 +124,13 @@ export default function Search() {
               <Link key={req.id} to={'/requests/' + req.id} className="result-card">
                 <div className="result-header">
                   <span className="result-cat">{CATEGORY_LABEL[req.category] || req.category}</span>
-                  <span className="result-city">📍 {req.city}</span>
+                  <span className="result-city"><Icon name="location" size={13} /> {req.city}</span>
                 </div>
                 <h2 className="result-title">{req.title}</h2>
                 <p className="result-desc">{req.description?.slice(0, 120)}...</p>
                 <div className="result-footer">
-                  <span className="result-client">👤 {req.users?.full_name}</span>
-                  {req.budget_min && <span className="result-budget">💰 {req.budget_min?.toLocaleString()} - {req.budget_max?.toLocaleString()} ريال</span>}
+                  <span className="result-client"><Icon name="user" size={13} /> {req.users?.full_name}</span>
+                  {req.budget_min && <span className="result-budget"><Icon name="money" size={13} /> {req.budget_min?.toLocaleString()} - {req.budget_max?.toLocaleString()} ريال</span>}
                   <span className="result-date">{new Date(req.created_at).toLocaleDateString('ar-SA')}</span>
                 </div>
               </Link>

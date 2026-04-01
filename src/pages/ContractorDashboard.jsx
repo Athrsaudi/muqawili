@@ -1,3 +1,4 @@
+import Icon from '../components/Icons'
 import FileUploader from '../components/FileUploader'
 import FileViewer from '../components/FileViewer'
 import { useState, useEffect } from 'react'
@@ -51,7 +52,7 @@ function ProfileTab({ user, profile, onUpdate }) {
   if (!profile) return <div className='empty-state'>جارٍ التحميل...</div>
   return (
     <div className='profile-form'>
-      {saved && <div className='profile-saved-banner'>✅ تم حفظ التغييرات بنجاح</div>}
+      {saved && <div className='profile-saved-banner'>تم حفظ التغييرات بنجاح</div>}
       <div className='form-field'><label>الاسم الكامل</label><input value={user?.full_name || ''} disabled className='disabled' /></div>
       <div className='form-field'><label>الجوال</label><input value={user?.phone || ''} disabled className='disabled' /></div>
       <div className='form-field'><label>مدينة الإقامة</label><input value={user?.city || ''} disabled className='disabled' /></div>
@@ -137,7 +138,7 @@ function PortfolioTab({ contractorId }) {
             existingFiles={uploadedFiles}
             onFilesChange={urls => setUploadedFiles(urls)}
           />
-          {err && <div className='req-error'>⚠️ {err}</div>}
+          {err && <div className='req-error'>{err}</div>}
           <button className='save-btn' onClick={add} disabled={saving}>{saving ? 'جارٍ...' : 'إضافة العمل'}</button>
         </div>
       )}
@@ -185,9 +186,9 @@ function RequestsTab({ contractorId }) {
         <div key={q.id} className={'quote-card ' + q.status} onClick={() => navigate('/requests/' + q.service_requests?.id)} style={{ cursor: 'pointer' }}>
           <div className='quote-req-title'>{q.service_requests?.title}</div>
           <div className='quote-meta'>
-            <span>💰 {Number(q.price).toLocaleString('ar')} ريال</span>
+            <span><Icon name="money" size={14} /> {Number(q.price).toLocaleString('ar')} ريال</span>
             <span>⏱ {q.duration_days} يوم</span>
-            <span className={'quote-status-badge ' + q.status}>{q.status === 'pending' ? 'قيد الانتظار' : q.status === 'accepted' ? '✅ مقبول' : '❌ مرفوض'}</span>
+            <span className={'quote-status-badge ' + q.status}>{q.status === 'pending' ? 'قيد الانتظار' : q.status === 'accepted' ? 'مقبول ✓' : 'مرفوض ✗'}</span>
           </div>
         </div>
       ))}
@@ -223,38 +224,41 @@ export default function ContractorDashboard() {
   if (loading) return <div className='dash-loading'>جارٍ التحميل...</div>
 
   const tabs = [
-    { id: 'overview', label: '📊 نظرة عامة' },
-    { id: 'profile', label: '👤 ملفي' },
-    { id: 'portfolio', label: '🏗️ أعمالي' },
-    { id: 'requests', label: '📋 عروضي' },
+    { id: 'overview',  label: 'نظرة عامة', icon: 'home' },
+    { id: 'profile',   label: 'ملفي',       icon: 'user' },
+    { id: 'portfolio', label: 'أعمالي',     icon: 'building' },
+    { id: 'requests',  label: 'عروضي',      icon: 'clipboard' },
   ]
 
   return (
     <div className='dash-layout' dir='rtl'>
       <aside className='dash-sidebar'>
-        <div className='dash-logo'>🏗️ مقاولي</div>
+        <div className='dash-logo'>خدماتي</div>
         <nav className='dash-nav'>
           {tabs.map(t => (
             <button key={t.id} className={'dash-nav-item ' + (tab === t.id ? 'active' : '')} onClick={() => setTab(t.id)}>
+              <Icon name={t.icon} size={17} />
               {t.label}
             </button>
           ))}
         </nav>
-        <button className='dash-logout' onClick={logout}>🚪 تسجيل خروج</button>
+        <button className='dash-logout' onClick={logout}>
+          <Icon name="logout" size={17} /> تسجيل خروج
+        </button>
       </aside>
       <main className='dash-main'>
         {tab === 'overview' && (
           <div className='dash-content'>
             <h1 className='dash-title'>مرحباً، {user?.full_name?.split(' ')[0]} 👋</h1>
             <div className='stats-grid'>
-              <div className='stat-card'><div className='stat-icon'>⭐</div><div className='stat-val'>{profile?.avg_rating ? Number(profile.avg_rating).toFixed(1) : '—'}</div><div className='stat-lbl'>التقييم</div></div>
-              <div className='stat-card'><div className='stat-icon'>💬</div><div className='stat-val'>{profile?.total_reviews || 0}</div><div className='stat-lbl'>التقييمات</div></div>
-              <div className='stat-card'><div className='stat-icon'>🔖</div><div className='stat-val'>{profile?.badge_type === 'verified' ? 'موثق' : profile?.badge_type === 'trusted' ? 'موثوق' : '—'}</div><div className='stat-lbl'>الشارة</div></div>
+              <div className='stat-card'><div className='stat-icon'><Icon name='star' size={22} color='var(--gold)' /></div><div className='stat-val'>{profile?.avg_rating ? Number(profile.avg_rating).toFixed(1) : '—'}</div><div className='stat-lbl'>التقييم</div></div>
+              <div className='stat-card'><div className='stat-icon'><Icon name='chat' size={22} color='var(--gold)' /></div><div className='stat-val'>{profile?.total_reviews || 0}</div><div className='stat-lbl'>التقييمات</div></div>
+              <div className='stat-card'><div className='stat-icon'><Icon name='shield' size={22} color='var(--gold)' /></div><div className='stat-val'>{profile?.badge_type === 'verified' ? 'موثق' : profile?.badge_type === 'trusted' ? 'موثوق' : '—'}</div><div className='stat-lbl'>الشارة</div></div>
             </div>
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
-              <button className='action-btn' onClick={() => setTab('profile')}>✏️ تعديل ملفي</button>
+              <button className='action-btn' onClick={() => setTab('profile')}>تعديل ملفي</button>
               <button className='action-btn' onClick={() => setTab('portfolio')}>+ إضافة عمل</button>
-              <button className='action-btn' onClick={() => navigate('/search')}>🔍 تصفح الطلبات</button>
+              <button className='action-btn' onClick={() => navigate('/search')}>تصفح الطلبات</button>
             </div>
           </div>
         )}

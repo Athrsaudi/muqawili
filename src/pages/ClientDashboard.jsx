@@ -49,7 +49,7 @@ export default function ClientDashboard() {
             + نشر طلب جديد
           </Link>
           <Link to="/search" className="btn btn-outline btn-lg">
-            🔍 البحث عن مقاول
+            البحث عن مقاول
           </Link>
         </div>
 
@@ -74,7 +74,7 @@ export default function ClientDashboard() {
                   </div>
                 </div>
                 <div className="ri-footer">
-                  <span>📍 {r.city}{r.district ? ` — ${r.district}` : ''}</span>
+                  <span>{r.city}{r.district ? ` — ${r.district}` : ''}</span>
                   <span>📨 {r.price_quotes?.length || 0} عرض</span>
                   <span className="ri-date">{new Date(r.created_at).toLocaleDateString('ar-SA')}</span>
                 </div>
