@@ -148,8 +148,8 @@ export default function Login() {
       <div className='auth-wrap'>
         <div className='auth-logo'>
           <div className='auth-logo-icon'><LogoIconMini /></div>
-          <h1>مقاولي</h1>
-          <p>سوق المقاولات السعودي</p>
+          <h1>خدماتي</h1>
+          <p>سوق الخدمات السعودي</p>
         </div>
         <div className='auth-card'>
           <div className='auth-tabs'>

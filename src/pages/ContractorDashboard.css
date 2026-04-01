@@ -164,7 +164,7 @@
 
 .stat-card {
   background: var(--bg-card);
-  border: 1px solid var(--bg-hover);
+  border: 1.5px solid var(--border);
   border-radius: 20px;
   padding: 24px;
   text-align: center;
@@ -191,7 +191,11 @@
 .stat-card:hover::before { opacity: 1; }
 
 .stat-icon { font-size: 32px; margin-bottom: 12px; display: block; }
-.stat-val { font-size: 32px; font-weight: 900; color: var(--text-primary); margin-bottom: 6px; letter-spacing: -1px; }
+.stat-val {
+  font-size: 32px; font-weight: 900; margin-bottom: 6px; letter-spacing: -1px;
+  background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
 .stat-lbl { font-size: 13px; color: var(--text-muted); font-weight: 500; }
 
 .action-btn {
@@ -221,7 +225,7 @@
   padding: 60px 20px;
   background: var(--bg-card);
   border-radius: 20px;
-  border: 1px dashed var(--bg-hover);
+  border: 1px dashed var(--border);
 }
 
 .profile-form {
@@ -232,7 +236,7 @@
   background: var(--bg-card);
   padding: 32px;
   border-radius: 24px;
-  border: 1px solid var(--bg-hover);
+  border: 1px solid var(--border);
 }
 
 .form-field { display: flex; flex-direction: column; gap: 8px; }
@@ -247,7 +251,7 @@
 
 .form-field input, .form-field textarea {
   background: var(--bg-card);
-  border: 1px solid var(--bg-hover);
+  border: 1px solid var(--border);
   border-radius: 12px;
   padding: 14px 16px;
   color: var(--text-primary);
@@ -273,7 +277,7 @@
   padding: 16px;
   background: var(--bg-card2);
   border-radius: 12px;
-  border: 1px solid var(--bg-hover);
+  border: 1px solid var(--border);
 }
 
 .toggle-btn {
@@ -339,7 +343,7 @@
 
 .portfolio-card {
   background: var(--bg-card);
-  border: 1px solid var(--bg-hover);
+  border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
   transition: all 0.2s;
@@ -396,7 +400,7 @@
 
 .field input, .field textarea {
   background: var(--bg-card);
-  border: 1px solid var(--bg-hover);
+  border: 1px solid var(--border);
   border-radius: 10px;
   padding: 12px 14px;
   color: var(--text-primary);
@@ -417,7 +421,7 @@
 
 .quote-card {
   background: var(--bg-card);
-  border: 1px solid var(--bg-hover);
+  border: 1px solid var(--border);
   border-radius: 16px;
   padding: 20px;
   cursor: pointer;

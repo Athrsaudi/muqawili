@@ -362,3 +362,18 @@ input, textarea, select { font-family: inherit; }
 [data-theme="light"] .cat-item {
   box-shadow: 0 2px 12px rgba(0,0,0,.08);
 }
+
+/* ── إصلاح إضافي للوضع الفاتح ── */
+[data-theme="light"] .stat-val,
+[data-theme="light"] .stat-num {
+  background: linear-gradient(135deg, #8B5A00, #C8922A);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+[data-theme="light"] .cp-avatar { color: #fff; }
+[data-theme="light"] .submit-review-btn,
+[data-theme="light"] .save-btn { color: #fff; }
+[data-theme="light"] .quote-price-badge { color: var(--success); }
+[data-theme="light"] .rating-num { color: var(--gold-dark); }

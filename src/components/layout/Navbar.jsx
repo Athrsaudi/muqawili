@@ -165,7 +165,7 @@ export default function Navbar() {
       <div className="nav-actions">
             {/* زر Dark/Light */}
             <button className="theme-toggle" onClick={toggleTheme} title="تغيير الوضع">
-              <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
+              <Icon name={theme === 'dark' ? 'moon' : 'sun'} size={18} />
             </button>
         {user ? (
           <>
