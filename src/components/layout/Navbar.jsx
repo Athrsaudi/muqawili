@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
+import { useAuth } from '../../context/AuthContext'
 import './Navbar.css'
 
 // ── أيقونة البرج فقط (بدون نص داخل SVG) ──
@@ -62,8 +63,7 @@ function Logo() {
 export default function Navbar() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [user, setUser] = useState(null);
-  const [userData, setUserData] = useState(null);
+  const { user, profile: userData, signOut: authSignOut } = useAuth();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'dark');
   const [notifCount, setNotifCount] = useState(0);
@@ -82,21 +82,10 @@ export default function Navbar() {
     setTheme(t => t === 'dark' ? 'light' : 'dark')
   }
 
+  // تحميل الإشعارات عند تسجيل الدخول
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) loadUser(session.user);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_, session) => {
-      if (session?.user) {
-        loadUser(session.user);
-      } else {
-        setUser(null);
-        setUserData(null);
-        setNotifCount(0);
-      }
-    });
-    return () => subscription.unsubscribe();
-  }, []);
+    if (user) loadNotifs(user.id);
+  }, [user]);
 
   useEffect(() => {
     const handler = (e) => {
@@ -107,13 +96,6 @@ export default function Navbar() {
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
-
-  async function loadUser(authUser) {
-    setUser(authUser);
-    const { data } = await supabase.from('users').select('*').eq('id', authUser.id).single();
-    setUserData(data);
-    loadNotifs(authUser.id);
-  }
 
   async function loadNotifs(userId) {
     const { data } = await supabase
@@ -143,7 +125,7 @@ export default function Navbar() {
 
   async function handleLogout() {
     setMenuOpen(false);
-    await supabase.auth.signOut();
+    await authSignOut();
     navigate('/');
   }
 

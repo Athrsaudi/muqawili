@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
 import ProtectedRoute from './components/ProtectedRoute'
 import ErrorBoundary from './components/ErrorBoundary'
+import { AuthProvider } from './context/AuthContext'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Search from './pages/Search'
@@ -15,6 +16,7 @@ import MyRequests from './pages/MyRequests'
 export default function App() {
   return (
     <BrowserRouter>
+      <AuthProvider>
       <ErrorBoundary>
       <Navbar />
       <Routes>
@@ -60,6 +62,7 @@ export default function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
       </ErrorBoundary>
+      </AuthProvider>
     </BrowserRouter>
   )
 }
