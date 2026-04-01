@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/layout/Navbar'
+import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import Login from './pages/Login'
 import Search from './pages/Search'
@@ -15,15 +16,45 @@ export default function App() {
     <BrowserRouter>
       <Navbar />
       <Routes>
+        {/* صفحات عامة */}
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/search" element={<Search />} />
-        <Route path="/requests/new" element={<NewRequest />} />
-        <Route path="/requests/:id" element={<RequestDetail />} />
-        <Route path="/dashboard/contractor" element={<ContractorDashboard />} />
         <Route path="/contractors/:id" element={<ContractorProfile />} />
-        <Route path="/admin" element={<AdminPanel />} />
-        <Route path="/my-requests" element={<MyRequests />} />
+
+        {/* صفحات تحتاج تسجيل دخول فقط */}
+        <Route path="/requests/:id" element={
+          <ProtectedRoute>
+            <RequestDetail />
+          </ProtectedRoute>
+        } />
+
+        {/* صفحات العملاء فقط */}
+        <Route path="/requests/new" element={
+          <ProtectedRoute allowedTypes={['client']}>
+            <NewRequest />
+          </ProtectedRoute>
+        } />
+        <Route path="/my-requests" element={
+          <ProtectedRoute allowedTypes={['client']}>
+            <MyRequests />
+          </ProtectedRoute>
+        } />
+
+        {/* صفحات المقاولين فقط */}
+        <Route path="/dashboard/contractor" element={
+          <ProtectedRoute allowedTypes={['contractor']}>
+            <ContractorDashboard />
+          </ProtectedRoute>
+        } />
+
+        {/* صفحات الإدارة فقط */}
+        <Route path="/admin" element={
+          <ProtectedRoute allowedTypes={['admin']}>
+            <AdminPanel />
+          </ProtectedRoute>
+        } />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
