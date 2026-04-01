@@ -1,6 +1,29 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import Icon from '../components/Icons'
+
+function LogoIconMini() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" width="52" height="52">
+      <defs>
+        <linearGradient id="lg" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stopColor="#C8922A"/>
+          <stop offset="50%" stopColor="#E8B84B"/>
+          <stop offset="100%" stopColor="#A67420"/>
+        </linearGradient>
+      </defs>
+      <rect x="2" y="2" width="48" height="48" rx="12" fill="#2D1A00" stroke="url(#lg)" strokeWidth="1.5"/>
+      <rect x="14" y="18" width="7" height="7" rx="1.5" fill="url(#lg)"/>
+      <rect x="23" y="12" width="8" height="13" rx="1.5" fill="url(#lg)"/>
+      <rect x="33" y="18" width="7" height="7" rx="1.5" fill="url(#lg)"/>
+      <rect x="12" y="23" width="28" height="22" rx="2" fill="url(#lg)" fillOpacity=".13" stroke="url(#lg)" strokeWidth="1.1"/>
+      <rect x="20" y="29" width="12" height="10" rx="2" fill="none" stroke="url(#lg)" strokeWidth="1"/>
+      <path d="M20 34 Q26 27 32 34" fill="none" stroke="url(#lg)" strokeWidth="1"/>
+      <line x1="26" y1="27" x2="26" y2="39" stroke="url(#lg)" strokeWidth=".8" strokeOpacity=".5"/>
+    </svg>
+  )
+}
 import './Login.css'
 
 const CITIES = ['جدة', 'الرياض', 'مكة المكرمة', 'المدينة المنورة', 'الدمام', 'الخبر', 'تبوك', 'أبها', 'حائل', 'القصيم', 'نجران', 'جازان']
@@ -124,7 +147,7 @@ export default function Login() {
       <div className='auth-bg' />
       <div className='auth-wrap'>
         <div className='auth-logo'>
-          <div className='auth-logo-icon'>🏗️</div>
+          <div className='auth-logo-icon'><LogoIconMini /></div>
           <h1>مقاولي</h1>
           <p>سوق المقاولات السعودي</p>
         </div>
@@ -152,11 +175,11 @@ export default function Login() {
                     onKeyDown={e => e.key === 'Enter' && doLogin()}
                   />
                   <button type='button' className='pass-toggle' onClick={() => setShowPass(v => !v)}>
-                    {showPass ? '🙈' : '👁️'}
+                    <Icon name={showPass ? 'eyeOff' : 'eye'} size={17} />
                   </button>
                 </div>
               </div>
-              {error && <div className='auth-error'>⚠️ {error}</div>}
+              {error && <div className='auth-error'>{error}</div>}
               <button className='auth-btn' onClick={doLogin} disabled={loading}>
                 {loading ? <span className='spinner' /> : 'دخول'}
               </button>
@@ -184,7 +207,7 @@ export default function Login() {
                     onChange={e => setRPassword(e.target.value)}
                   />
                   <button type='button' className='pass-toggle' onClick={() => setShowPassReg(v => !v)}>
-                    {showPassReg ? '🙈' : '👁️'}
+                    <Icon name={showPassReg ? 'eyeOff' : 'eye'} size={17} />
                   </button>
                 </div>
               </div>
@@ -228,7 +251,7 @@ export default function Login() {
                   {workCities.length > 0 && <p style={{ fontSize: '12px', color: '#3b82f6', marginTop: '6px' }}>تم اختيار {workCities.length} مدينة</p>}
                 </div>
               )}
-              {error && <div className='auth-error'>⚠️ {error}</div>}
+              {error && <div className='auth-error'>{error}</div>}
               <button className='auth-btn' onClick={doRegister} disabled={loading}>
                 {loading ? <span className='spinner' /> : 'إنشاء الحساب'}
               </button>

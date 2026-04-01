@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
 import { CATEGORIES, CATEGORY_MAP } from '../lib/constants'
 import { SkeletonGrid } from '../components/Skeleton'
+import Icon from '../components/Icons'
 import './Home.css'
 
 export default function Home() {
@@ -50,9 +51,21 @@ export default function Home() {
 
       <section className="stats-section">
         <div className="stats-row">
-          <div className="stat-item"><span className="stat-num">{stats.contractors}+</span><span className="stat-lbl">مزود خدمة مسجل</span></div>
-          <div className="stat-item"><span className="stat-num">{stats.requests}+</span><span className="stat-lbl">طلب مفتوح</span></div>
-          <div className="stat-item"><span className="stat-num">12</span><span className="stat-lbl">مدينة سعودية</span></div>
+          <div className="stat-item">
+            <Icon name="users" size={28} color="var(--gold)" />
+            <span className="stat-num">{stats.contractors}+</span>
+            <span className="stat-lbl">مزود خدمة مسجل</span>
+          </div>
+          <div className="stat-item">
+            <Icon name="clipboard" size={28} color="var(--gold)" />
+            <span className="stat-num">{stats.requests}+</span>
+            <span className="stat-lbl">طلب مفتوح</span>
+          </div>
+          <div className="stat-item">
+            <Icon name="location" size={28} color="var(--gold)" />
+            <span className="stat-num">12</span>
+            <span className="stat-lbl">مدينة سعودية</span>
+          </div>
         </div>
       </section>
 
@@ -62,7 +75,7 @@ export default function Home() {
           <div className="cats-grid">
             {CATEGORIES.map(cat => (
               <Link key={cat.value} to={'/search?category=' + cat.value} className="cat-item">
-                <span className="cat-emoji">{cat.icon}</span>
+                <span className="cat-emoji" role="img" aria-label={cat.label}>{cat.icon}</span>
                 <span className="cat-name">{cat.label}</span>
               </Link>
             ))}
@@ -89,7 +102,7 @@ export default function Home() {
                 <Link key={req.id} to={'/requests/' + req.id} className="recent-card">
                   <span className="recent-cat">{CATEGORY_MAP[req.category] || req.category}</span>
                   <h3 className="recent-title">{req.title}</h3>
-                  <span className="recent-city">📍 {req.city}</span>
+                  <span className="recent-city"><Icon name="location" size={13} /> {req.city}</span>
                 </Link>
               ))}
             </div>
@@ -101,7 +114,7 @@ export default function Home() {
         <section className="section">
           <div className="section-container">
             <div className="empty-state">
-              <span className="empty-icon">📋</span>
+              <Icon name="clipboard" size={48} color="var(--text-muted)" />
               <h3>لا توجد طلبات حالياً</h3>
               <p>كن أول من ينشر طلباً!</p>
               <Link to="/requests/new" className="btn btn-primary">أنشئ طلبًا مجانًا</Link>

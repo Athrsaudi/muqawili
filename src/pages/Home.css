@@ -74,7 +74,7 @@
   padding: 36px 24px;
 }
 .stats-row { display: flex; justify-content: center; gap: 64px; flex-wrap: wrap; }
-.stat-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.stat-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
 .stat-num {
   font-size: 34px; font-weight: 800;
   background: linear-gradient(135deg, var(--gold-dark), var(--gold));
@@ -127,7 +127,7 @@
   font-size: 12px; font-weight: 600; align-self: flex-start;
 }
 .recent-title { font-size: 15px; font-weight: 700; color: var(--text-primary); margin: 0; line-height: 1.4; }
-.recent-city { font-size: 13px; color: var(--text-muted); }
+.recent-city { font-size: 13px; color: var(--text-muted); display: flex; align-items: center; gap: 4px; }
 
 /* ── CTA ── */
 .cta-section {

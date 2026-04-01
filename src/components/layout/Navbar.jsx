@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import { useAuth } from '../../context/AuthContext'
+import Icon from '../Icons'
 import './Navbar.css'
 
 // ── أيقونة البرج فقط (بدون نص داخل SVG) ──
@@ -137,7 +138,7 @@ export default function Navbar() {
 
       {/* زر الموبايل */}
       <button className="nav-mobile-toggle" onClick={() => setMobileOpen(o => !o)} aria-label="القائمة">
-        {mobileOpen ? '✕' : '☰'}
+        <Icon name={mobileOpen ? 'close' : 'menu'} size={22} />
       </button>
 
       <div className={`nav-links${mobileOpen ? ' open' : ''}`}>
@@ -164,7 +165,7 @@ export default function Navbar() {
       <div className="nav-actions">
             {/* زر Dark/Light */}
             <button className="theme-toggle" onClick={toggleTheme} title="تغيير الوضع">
-              {theme === 'dark' ? '☀️' : '🌙'}
+              <Icon name={theme === 'dark' ? 'sun' : 'moon'} size={18} />
             </button>
         {user ? (
           <>
@@ -173,7 +174,7 @@ export default function Navbar() {
                 className="notif-btn"
                 onClick={() => { setNotifOpen(o => !o); if (!notifOpen) loadNotifs(user.id); }}
               >
-                🔔
+                <Icon name="bell" size={18} />
                 {notifCount > 0 && (
                   <span className="notif-badge">{notifCount > 9 ? '9+' : notifCount}</span>
                 )}
@@ -238,7 +239,7 @@ export default function Navbar() {
                       className="nav-menu-item"
                       onClick={() => setMenuOpen(false)}
                     >
-                      🏗️ لوحة التحكم
+                      <Icon name="tool" size={16} /> لوحة التحكم
                     </Link>
                   )}
                   {userData?.user_type === 'client' && (
@@ -247,7 +248,7 @@ export default function Navbar() {
                       className="nav-menu-item"
                       onClick={() => setMenuOpen(false)}
                     >
-                      📋 طلباتي
+                      <Icon name="clipboard" size={16} /> طلباتي
                     </Link>
                   )}
                   {userData?.user_type === 'admin' && (
@@ -256,12 +257,12 @@ export default function Navbar() {
                       className="nav-menu-item"
                       onClick={() => setMenuOpen(false)}
                     >
-                      ⚙️ لوحة الإدارة
+                      <Icon name="shield" size={16} /> لوحة الإدارة
                     </Link>
                   )}
                   <div className="nav-menu-divider" />
                   <button className="nav-menu-item nav-menu-logout" onClick={handleLogout}>
-                    🚪 تسجيل الخروج
+                    <Icon name="logout" size={16} /> تسجيل الخروج
                   </button>
                 </div>
               )}
