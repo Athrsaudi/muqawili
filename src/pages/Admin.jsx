@@ -106,17 +106,17 @@ export default function AdminPanel() {
  const clients = users.filter(u => u.user_type === 'client')
 
  const TABS = [
- { id: 'overview', icon: 'overview', label: 'نظرة عامة' },
- { id: 'contractors', icon: 'contractors', label: 'المقاولون' },
- { id: 'clients', icon: 'clients', label: 'العملاء' },
- { id: 'requests', icon: 'requests', label: 'الطلبات' },
+ { id: 'overview', icon: 'home', label: 'نظرة عامة' },
+ { id: 'contractors', icon: 'tool', label: 'المقاولون' },
+ { id: 'clients', icon: 'users', label: 'العملاء' },
+ { id: 'requests', icon: 'clipboard', label: 'الطلبات' },
  ]
 
  return (
  <div className="admin-page" dir="rtl">
  <aside className="admin-sidebar">
  <div className="admin-sidebar-header">
- <span className="admin-sidebar-icon">⚙</span>
+ <Icon name="shield" size={20} />
  <span className="admin-sidebar-title">لوحة الإدارة</span>
  </div>
  <nav className="admin-sidebar-nav">
@@ -126,7 +126,7 @@ export default function AdminPanel() {
  className={'admin-sidebar-btn' + (tab === t.id ? ' active' : '')}
  onClick={() => setTab(t.id)}
  >
- <span className="admin-sidebar-btn-icon">{t.icon}</span>
+ <Icon name={t.icon} size={16} />
  <span className="admin-sidebar-btn-label">{t.label}</span>
  </button>
  ))}
@@ -150,7 +150,7 @@ export default function AdminPanel() {
  { icon: 'star', val: stats.reviews, label: 'تقييم', color: '#f97316' },
  ].map((s, i) => (
  <div className="admin-stat-box" key={i} style={{ '--accent': s.color }}>
- <div className="admin-stat-icon">{s.icon}</div>
+ <div className="admin-stat-icon">{typeof s.icon === "string" && !s.icon.includes("📂") && !s.icon.includes("👥") ? <Icon name={s.icon} size={28} color="var(--gold-dark)" /> : <span style={{fontSize:28}}>{s.icon}</span>}</div>
  <div className="admin-stat-val">{s.val}</div>
  <div className="admin-stat-label">{s.label}</div>
  </div>

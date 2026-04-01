@@ -78,3 +78,20 @@
  .admin-main { padding:16px; }
  .admin-stats-grid { grid-template-columns:repeat(2,1fr); }
 }
+
+/* ══ LIGHT MODE — Admin ══ */
+[data-theme="light"] .admin-sidebar       { background: #fff; border-color: #e5d5c0; }
+[data-theme="light"] .admin-sidebar-title { color: #2D1A00; }
+[data-theme="light"] .admin-sidebar-btn   { color: #4A2E00; }
+[data-theme="light"] .admin-sidebar-btn:hover,
+[data-theme="light"] .admin-sidebar-btn.active { color: #6B4400; background: rgba(139,90,0,.08); }
+[data-theme="light"] .admin-main          { background: #FFF8EE; }
+[data-theme="light"] .admin-page-title    { color: #2D1A00; }
+[data-theme="light"] .admin-stat-box      { background: #fff; border-color: #e5d5c0; }
+[data-theme="light"] .admin-stat-val      { color: #2D1A00; }
+[data-theme="light"] .admin-stat-label    { color: #6B5040; }
+[data-theme="light"] .admin-section-title { color: #2D1A00; }
+[data-theme="light"] .admin-table th      { background: #f5ede0; color: #4A2E00; border-color: #e5d5c0; }
+[data-theme="light"] .admin-table td      { color: #2D1A00; border-color: #f0e4d0; }
+[data-theme="light"] .admin-table tr:hover td { background: rgba(139,90,0,.04); }
+[data-theme="light"] .admin-rating        { color: #6B4400; }
