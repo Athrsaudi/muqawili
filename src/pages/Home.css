@@ -161,3 +161,13 @@
   .hero-search { flex-direction: column; }
   .cat-item { padding: 16px 10px; }
 }
+
+/* ── Empty State ── */
+.empty-state {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 12px; padding: 60px 24px; text-align: center;
+  color: var(--text-secondary);
+}
+.empty-icon { font-size: 48px; }
+.empty-state h3 { font-size: 18px; font-weight: 700; color: var(--text-primary); }
+.empty-state p  { font-size: 14px; color: var(--text-muted); }

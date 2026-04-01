@@ -1,0 +1,60 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 80" fill="none">
+  <defs>
+    <linearGradient id="goldGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#C8922A"/>
+      <stop offset="50%" stop-color="#E8B84B"/>
+      <stop offset="100%" stop-color="#A67420"/>
+    </linearGradient>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1A0F00"/>
+      <stop offset="100%" stop-color="#2D1A00"/>
+    </linearGradient>
+  </defs>
+
+  <!-- خلفية الأيقونة -->
+  <rect x="4" y="4" width="72" height="72" rx="16" fill="url(#bgGrad)"/>
+  <rect x="4" y="4" width="72" height="72" rx="16" fill="none" stroke="url(#goldGrad)" stroke-width="1.5"/>
+
+  <!-- برج تراثي نجدي مبسط -->
+  <!-- الجسم الرئيسي -->
+  <rect x="24" y="32" width="32" height="30" rx="2" fill="url(#goldGrad)" opacity="0.15"/>
+  <rect x="24" y="32" width="32" height="30" rx="2" fill="none" stroke="url(#goldGrad)" stroke-width="1.2"/>
+
+  <!-- شرفات البرج (مزاغل نجدية) -->
+  <rect x="22" y="26" width="8" height="8" rx="1" fill="url(#goldGrad)" opacity="0.9"/>
+  <rect x="32" y="22" width="8" height="12" rx="1" fill="url(#goldGrad)"/>
+  <rect x="42" y="26" width="8" height="8" rx="1" fill="url(#goldGrad)" opacity="0.9"/>
+
+  <!-- نافذة روشن حجازي -->
+  <rect x="32" y="38" width="16" height="12" rx="2" fill="none" stroke="url(#goldGrad)" stroke-width="1"/>
+  <path d="M32 44 Q40 38 48 44" fill="none" stroke="url(#goldGrad)" stroke-width="1"/>
+  <line x1="40" y1="38" x2="40" y2="50" stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.6"/>
+
+  <!-- الباب -->
+  <path d="M36 62 L36 54 Q40 50 44 54 L44 62 Z" fill="url(#goldGrad)" opacity="0.3"/>
+  <path d="M36 62 L36 54 Q40 50 44 54 L44 62" fill="none" stroke="url(#goldGrad)" stroke-width="1"/>
+
+  <!-- زخرفة هندسية أعلى (نجمة ثمانية مبسطة) -->
+  <g transform="translate(40,18)">
+    <circle cx="0" cy="0" r="3" fill="url(#goldGrad)"/>
+    <line x1="-5" y1="0" x2="5" y2="0" stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.7"/>
+    <line x1="0" y1="-5" x2="0" y2="5" stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.7"/>
+    <line x1="-3.5" y1="-3.5" x2="3.5" y2="3.5" stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.5"/>
+    <line x1="3.5" y1="-3.5" x2="-3.5" y2="3.5" stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.5"/>
+  </g>
+
+  <!-- خط زخرفي سفلي -->
+  <line x1="18" y1="66" x2="62" y2="66" stroke="url(#goldGrad)" stroke-width="0.8" opacity="0.4"/>
+  <circle cx="40" cy="66" r="1.5" fill="url(#goldGrad)" opacity="0.7"/>
+  <circle cx="30" cy="66" r="1" fill="url(#goldGrad)" opacity="0.4"/>
+  <circle cx="50" cy="66" r="1" fill="url(#goldGrad)" opacity="0.4"/>
+
+  <!-- النص: خدماتي -->
+  <text x="90" y="46" font-family="'Tajawal', 'Arial', sans-serif" font-size="30" font-weight="800" fill="url(#goldGrad)" text-anchor="start" letter-spacing="-0.5">خدماتي</text>
+
+  <!-- شعار فرعي -->
+  <text x="91" y="62" font-family="'Tajawal', 'Arial', sans-serif" font-size="11" font-weight="400" fill="#A67420" text-anchor="start" opacity="0.85" letter-spacing="0.5">سوق الخدمات السعودي</text>
+
+  <!-- زخرفة يمين النص -->
+  <line x1="88" y1="50" x2="88" y2="58" stroke="url(#goldGrad)" stroke-width="1" opacity="0.4"/>
+</svg>

@@ -1,31 +1,21 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../lib/supabase'
+import { CATEGORIES, CATEGORY_MAP } from '../lib/constants'
+import { SkeletonGrid } from '../components/Skeleton'
 import './Home.css'
-
-const CATEGORIES = [
-  { value: 'cladding', label: 'كلادينج', icon: '🏗️' },
-  { value: 'plumbing', label: 'سباكة', icon: '🚧' },
-  { value: 'electrical', label: 'كهرباء', icon: '⚡' },
-  { value: 'demolition', label: 'هدم', icon: '💥' },
-  { value: 'finishing', label: 'تشطيب', icon: '🎨' },
-  { value: 'painting', label: 'دهان', icon: '🖌️' },
-  { value: 'flooring', label: 'أرضيات', icon: '🧱' },
-  { value: 'hvac', label: 'تكييف', icon: '❄️' },
-  { value: 'general', label: 'عام', icon: '🔧' },
-]
-
-const CATEGORY_LABEL = { cladding:'كلادينج', plumbing:'سباكة', electrical:'كهرباء', demolition:'هدم', finishing:'تشطيب', painting:'دهان', flooring:'أرضيات', hvac:'تكييف', general:'عام' }
 
 export default function Home() {
   const navigate = useNavigate()
   const [stats, setStats] = useState({ contractors: 0, requests: 0 })
   const [recentRequests, setRecentRequests] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchQ, setSearchQ] = useState('')
 
   useEffect(() => { loadStats() }, [])
 
   async function loadStats() {
+    setLoading(true)
     const [contractorsRes, requestsRes] = await Promise.all([
       supabase.from('contractor_profiles').select('id', { count: 'exact', head: true }),
       supabase.from('service_requests').select('id', { count: 'exact', head: true }).eq('status', 'open'),
@@ -37,6 +27,7 @@ export default function Home() {
       .limit(6)
     setStats({ contractors: contractorsRes.count || 0, requests: requestsRes.count || 0 })
     setRecentRequests(recent || [])
+    setLoading(false)
   }
 
   return (
@@ -79,7 +70,14 @@ export default function Home() {
         </div>
       </section>
 
-      {recentRequests.length > 0 && (
+      {loading ? (
+        <section className="section">
+          <div className="section-container">
+            <h2 className="section-title">آخر الطلبات</h2>
+            <SkeletonGrid count={6} />
+          </div>
+        </section>
+      ) : recentRequests.length > 0 && (
         <section className="section">
           <div className="section-container">
             <div className="section-header">
@@ -89,11 +87,24 @@ export default function Home() {
             <div className="recent-grid">
               {recentRequests.map(req => (
                 <Link key={req.id} to={'/requests/' + req.id} className="recent-card">
-                  <span className="recent-cat">{CATEGORY_LABEL[req.category] || req.category}</span>
+                  <span className="recent-cat">{CATEGORY_MAP[req.category] || req.category}</span>
                   <h3 className="recent-title">{req.title}</h3>
                   <span className="recent-city">📍 {req.city}</span>
                 </Link>
               ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!loading && recentRequests.length === 0 && (
+        <section className="section">
+          <div className="section-container">
+            <div className="empty-state">
+              <span className="empty-icon">📋</span>
+              <h3>لا توجد طلبات حالياً</h3>
+              <p>كن أول من ينشر طلباً!</p>
+              <Link to="/requests/new" className="btn btn-primary">أنشئ طلبًا مجانًا</Link>
             </div>
           </div>
         </section>
