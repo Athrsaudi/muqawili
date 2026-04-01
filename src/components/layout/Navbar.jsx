@@ -3,10 +3,10 @@ import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { supabase } from '../../lib/supabase'
 import './Navbar.css'
 
-// ── شعار خدماتي SVG ──
-function Logo() {
+// ── أيقونة البرج فقط (بدون نص داخل SVG) ──
+function LogoIcon() {
   return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 52" height="40" width="auto">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" height="42" width="42">
       <defs>
         <linearGradient id="ng" x1="0%" y1="0%" x2="100%" y2="100%">
           <stop offset="0%"   stopColor="#C8922A"/>
@@ -18,23 +18,44 @@ function Logo() {
           <stop offset="100%" stopColor="#1A0F00"/>
         </linearGradient>
       </defs>
-      {/* أيقونة البرج */}
-      <rect x="2" y="2" width="48" height="48" rx="11" fill="url(#nbg)" stroke="url(#ng)" strokeWidth="1.2"/>
-      <rect x="14" y="18" width="6"  height="6"  rx="1" fill="url(#ng)"/>
-      <rect x="22" y="13" width="8"  height="11" rx="1" fill="url(#ng)"/>
-      <rect x="32" y="18" width="6"  height="6"  rx="1" fill="url(#ng)"/>
-      <rect x="13" y="23" width="26" height="20" rx="2" fill="url(#ng)" fillOpacity=".12" stroke="url(#ng)" strokeWidth="1"/>
-      <rect x="20" y="28" width="12" height="9"  rx="2" fill="none" stroke="url(#ng)" strokeWidth=".9"/>
-      <path d="M20 32 Q26 26 32 32" fill="none" stroke="url(#ng)" strokeWidth=".9"/>
-      <line x1="26" y1="26" x2="26" y2="37" stroke="url(#ng)" strokeWidth=".7" strokeOpacity=".5"/>
+      <rect x="2" y="2" width="48" height="48" rx="11" fill="url(#nbg)" stroke="url(#ng)" strokeWidth="1.4"/>
+      {/* شرفات نجدية */}
+      <rect x="14" y="18" width="7"  height="7"  rx="1.5" fill="url(#ng)"/>
+      <rect x="23" y="12" width="8"  height="13" rx="1.5" fill="url(#ng)"/>
+      <rect x="33" y="18" width="7"  height="7"  rx="1.5" fill="url(#ng)"/>
+      {/* جسم البرج */}
+      <rect x="12" y="23" width="28" height="22" rx="2" fill="url(#ng)" fillOpacity=".13" stroke="url(#ng)" strokeWidth="1.1"/>
+      {/* نافذة روشن */}
+      <rect x="20" y="29" width="12" height="10" rx="2" fill="none" stroke="url(#ng)" strokeWidth="1"/>
+      <path d="M20 34 Q26 27 32 34" fill="none" stroke="url(#ng)" strokeWidth="1"/>
+      <line x1="26" y1="27" x2="26" y2="39" stroke="url(#ng)" strokeWidth=".8" strokeOpacity=".5"/>
+      {/* نجمة */}
       <g transform="translate(26,9)">
-        <polygon points="0,-4 1.2,-1.2 4,0 1.2,1.2 0,4 -1.2,1.2 -4,0 -1.2,-1.2" fill="url(#ng)" opacity=".85"/>
-        <circle r="1.5" fill="url(#ng)"/>
+        <polygon points="0,-4.5 1.3,-1.3 4.5,0 1.3,1.3 0,4.5 -1.3,1.3 -4.5,0 -1.3,-1.3" fill="url(#ng)" opacity=".9"/>
+        <circle r="1.6" fill="url(#ng)"/>
       </g>
-      {/* النص */}
-      <text x="58" y="30" fontFamily="Tajawal, Arial, sans-serif" fontSize="22" fontWeight="800" fill="url(#ng)">خدماتي</text>
-      <text x="59" y="43" fontFamily="Tajawal, Arial, sans-serif" fontSize="9"  fontWeight="400" fill="#A67420" fillOpacity=".85">سوق الخدمات السعودي</text>
+      {/* زخرفة سفلية */}
+      <line x1="16" y1="48" x2="36" y2="48" stroke="url(#ng)" strokeWidth=".8" strokeOpacity=".3"/>
+      <circle cx="26" cy="48" r="1.5" fill="url(#ng)" fillOpacity=".6"/>
     </svg>
+  )
+}
+
+// ── شعار كامل: أيقونة + نص HTML ──
+function Logo() {
+  return (
+    <span style={{ display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none' }}>
+      <LogoIcon />
+      <span style={{ display: 'flex', flexDirection: 'column', lineHeight: 1.15 }}>
+        <span style={{
+          fontSize: '20px', fontWeight: 800,
+          background: 'linear-gradient(135deg, #C8922A, #E8B84B, #A67420)',
+          WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
+          backgroundClip: 'text'
+        }}>خدماتي</span>
+        <span style={{ fontSize: '10px', color: '#A67420', fontWeight: 400 }}>سوق الخدمات السعودي</span>
+      </span>
+    </span>
   )
 }
 
